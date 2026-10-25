@@ -1,0 +1,40 @@
+# Build output
+build/
+target/
+out/
+.gradle/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Obsidian: all of it is per-device state (Obsidian rewrites app.json too) and would dirty the checkout
+.obsidian/
+.trash/
+
+# Syncthing temp files (in case the vault is synced)
+.syncthing.*.tmp
+.stfolder/
+.stversions/
+
+# Claude Code local-only files
+.claude/settings.local.json
+.claude/worktrees/
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS
+.DS_Store
+
+# Throwaway experiments never get committed by default
+spikes/**/build/
+
+# Python bytecode
+__pycache__/
