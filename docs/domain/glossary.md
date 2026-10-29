@@ -10,7 +10,12 @@ Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md) and [docs/architecture/](.
 - **Mandate**: the user's rules for what agents may do. Written in plain language, compiled into structured rules, shown back and active only after confirmation. Can be tightened at any time, never loosened silently.
 - **Mandate compiler**: an LLM-guided conversation that helps the user state their rules, asks clarifying questions, and compiles the result into structured hard rules (the mandate draft). It's an authoring aid only. It never takes part in a decision, and its output has no effect until the user confirms it.
 - **Mandate draft**: a compiled but not yet confirmed mandate. It has no effect.
-- **Purchase proposal / attempt**: an order an agent asks the control layer to approve: merchant, item ids, quantities, a `purchaseKey`, and the agent's own (untrusted) description.
+- **Purchase proposal / attempt**: an order an agent asks the control layer to approve: merchant, lines (item ids or item specs) with quantities, a `purchaseKey`, and the agent's own (untrusted) description. Never personal data.
+- **Item spec**: a typed description of what to buy where the merchant sells offers rather than catalogue items (a flight: origin, destination, local date, passenger count, cabin), from a closed set of categories with validated values; `payments` resolves it against the merchant's offers and a pure rule picks among the matches.
+- **Profile**: the cardholder's buyer, traveller and delivery entries and notification channels, versioned, edited only in the app; a mandate names the entries it may use, and only version ids leave the `profiles` module.
+- **Standing mandate**: a confirmed mandate with a run frequency and a purchase count, run without the user in chat (a price watch, "look every morning"); it is **fulfilled** when the count is reached.
+- **Due run / run claim**: one scheduled run of a standing mandate, kept by `agents`; the harness runtime claims it once and receives the run token for it.
+- **Watch**: the harness module that runs standing mandates; its price check is advisory, the backend decides on the merchant's cart.
 - **Merchant cart**: the priced cart a merchant returns through an agent checkout session (UCP, ACP, Mastercard Level 3), fetched by the backend. The only source of binding cart facts.
 - **Cart evidence tiers**: 1 the merchant cart; 2 product records the backend fetched from the merchant; 3 what the agent says. Auto-purchase needs tier 1 with every requirement settled by fixed rules ([ADR-0007](../adr/ADR-0007-cart-evidence-and-auto-purchase.md)).
 - **Checkout session**: a merchant-side session opened through a network agent protocol; it holds the cart and is completed with the single-use credential.
@@ -39,10 +44,12 @@ Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md) and [docs/architecture/](.
 - **Audit log**: append-only record of every Decision with its inputs and reasons, which can be replayed.
 - **Pre-approval**: written in the same transaction as an APPROVE; what the hook responder matches an authorisation against (token, amount at or below, merchant, window, unused).
 - **Pre-approval consumption**: the hook responder's record that a pre-approval matched an authorisation; unique per pre-approval, so one pre-approval pays once.
-- **Checkout attempt**: the persisted state of paying for one approved decision (`CREATED`, `CREDENTIAL_REQUESTED`, `COMPLETING`, `PENDING_USER`, `COMPLETED`, `FAILED`, `UNKNOWN`, `CANCELLED`); at most one credential request per decision.
+- **Checkout attempt**: the persisted state of paying for one approved decision (`CREATED`, `CREDENTIAL_REQUESTED`, `COMPLETING`, `PENDING_USER`, `COMPLETED`, `FAILED`, `UNKNOWN`, `CANCELLED`); at most one credential request per decision; `UNKNOWN` is announced by its own event.
 - **DecisionInput**: everything a decision was based on, stored with it; replaying it through the pure core must return the same decision.
 - **Agent session token**: signed by the backend, short-lived, bound to cardholder, agent instance and audience; the only way an agent's identity reaches the control layer during a chat.
-- **Agent run token**: the same, issued when a standing mandate is confirmed and bound to it, for runs the user did not start; it dies with the mandate.
+- **Agent run token**: the same, minted for one claimed run of a standing mandate, bound also to the mandate and limited to proposing and reading; short-lived.
+- **Agent-instance credential**: the one long-lived secret in the harness; it can only claim due runs of its own agent instance.
+- **Foreign-currency margin**: a caution-only allowance from `settings` added to a converted amount before it is compared with a limit, because the bank bills at its own rate.
 - **Hook (authorisation hook)**: the bank processor's real-time call to an external URL for each card authorisation, waiting for approve or decline within its budget (800 ms to 2 s).
 - **Hook responder**: our service that answers the hook from pre-approvals, in shadow or enforcing mode.
 - **Shadow mode**: the hook responder records what it would answer without blocking anything.

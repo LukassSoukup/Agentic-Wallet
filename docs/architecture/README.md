@@ -1,13 +1,13 @@
 # Architecture
 
-The backend's architecture style, its deployables and its module cut, agreed with the user in the brainstorm of 2026-10-29. The decisions are recorded in [ADR-0006](../adr/ADR-0006-architecture-style-and-module-cut.md) (style, deployables, module cut) and [ADR-0007](../adr/ADR-0007-cart-evidence-and-auto-purchase.md) (where the cart comes from and when a purchase may go ahead without asking). These pages explain them; where they differ, the ADRs win.
+The backend's architecture style, its deployables and its module cut, agreed with the user in the brainstorm of 2026-10-29 and amended on 2026-10-30 after an end-to-end walkthrough of an unattended price watch. The decisions are recorded in [ADR-0006](../adr/ADR-0006-architecture-style-and-module-cut.md) (style, deployables, module cut) and [ADR-0007](../adr/ADR-0007-cart-evidence-and-auto-purchase.md) (where the cart comes from and when a purchase may go ahead without asking). These pages explain them; where they differ, the ADRs win.
 
 | Page | What it answers |
 |---|---|
 | [01-style.md](01-style.md) | Which architecture style, and why the others were rejected |
 | [02-system.md](02-system.md) | The deployables, trust zones, how they talk, how they are deployed |
 | [03-modules.md](03-modules.md) | The module cut inside each deployable, the Maven layout, the events |
-| [04-purchase-flow.md](04-purchase-flow.md) | One purchase end to end: proposal, cart evidence, decision, step-up, checkout, hook, reconciliation |
+| [04-purchase-flow.md](04-purchase-flow.md) | One purchase end to end: proposal, cart evidence, decision, step-up, checkout, hook, reconciliation; the same flow for a standing mandate without the user |
 | [05-open-items.md](05-open-items.md) | What this design leaves open, and who or what closes it |
 | [06-consistency.md](06-consistency.md) | Budget locking, step-up re-check, checkout attempts, pre-approval consumption, idempotency, the replay unit, event delivery |
 
