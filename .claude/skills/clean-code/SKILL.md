@@ -30,7 +30,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 ## Rules
 
 ### Names
-- Use the [glossary](../../../docs/domain/glossary.md) words: `Mandate`, `Decision`, `StepUp`, `SpendLedger`, `UntrustedText`. No synonyms (`Rule` vs `Policy` vs `Constraint` for one idea), no new terms without adding them to the glossary.
+- Use the words of the [glossary](../../../docs/domain/glossary.md) and the ADR names for types and ports (`Mandate`, `Decision`, step-up, `UntrustedText`, `SpendLedger` from [ADR-0006](../../../docs/adr/ADR-0006-domain-model-and-ports.md)). No synonyms (`Rule` vs `Policy` vs `Constraint` for one idea), no new terms without adding them to the glossary.
 - Classes are nouns, methods are verbs, booleans read as predicates (`isWithinLimit`, `hasPendingStepUp`).
 - Name for the reader, not the implementation: `remainingBudget`, not `tmpVal2`, `map`, `data`, `helper`, `manager`, `util`.
 - Units and currency belong in the type, not the name (`Money`, `Duration`), never `amountCzk: BigDecimal`.
@@ -59,7 +59,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 - Hexagonal (invariant 9): the core imports no framework, DB, HTTP, clock or random. Time, randomness, FX, storage and models come in through ports. Adapters translate; they hold no business rules.
 
 ### Errors
-- Named exception types per failure (`MandateNotConfirmedException`, `IdempotencyConflictException`), never bare `RuntimeException`/`Exception`.
+- Named exception types per failure (`MandateNotConfirmedException`, `UnsupportedCurrencyException`), never bare `RuntimeException`/`Exception`.
 - Expected business outcomes (DECLINE, STEP_UP, an idempotency conflict) are values, not exceptions.
 - Never swallow: no empty `catch`, no log-and-continue that hides a failure. Catch only what you can handle; wrap with context and the cause when crossing a layer.
 - Fail fast on broken preconditions at the boundary; trust validated types inside.
@@ -82,6 +82,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 - Builders or Object Mothers for test data; no magic numbers without a name.
 - Test behaviour through public APIs, not private methods or mocks of value objects. Don't test the mock.
 - Synthetic data is labelled as synthetic.
+- The rest of CLAUDE.md's "Done means tested" applies too: property tests for money and the decision combiner, a Testcontainers test per DB adapter, one shared contract suite per port with more than one adapter, and the coverage and mutation floors on `core`.
 
 ### Deleting code
 - Delete dead code, don't comment it out; git keeps history.
@@ -97,7 +98,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 - Leave the code a little cleaner than you found it, inside the scope of your task. Larger clean-ups get their own backlog item.
 
 ## Done checklist
-- [ ] Tests first, with the edge cases; all green; the build passes formatting, static analysis and warnings.
+- [ ] Tests first, with the edge cases, property, Testcontainers and contract tests where CLAUDE.md asks for them; all green; the build passes formatting, static analysis and warnings.
 - [ ] No smell from [code-smells.md](references/code-smells.md) introduced; any you found and left are noted in the PR.
 - [ ] Names match the glossary; no primitives for domain concepts; no `null` from public methods.
 - [ ] No duplication of knowledge; no speculative generality; no dead code.

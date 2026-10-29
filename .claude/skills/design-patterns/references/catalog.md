@@ -60,7 +60,7 @@ The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt the
 [Explanation](https://refactoring.guru/design-patterns/decorator) · [Java example](https://github.com/RefactoringGuru/design-patterns-java/tree/main/src/refactoring_guru/decorator) · [TypeScript example](https://github.com/RefactoringGuru/design-patterns-typescript/tree/main/src/Decorator)
 - **Use when:** Add responsibilities to an object without changing it or its callers.
 - **Avoid when:** The added behaviour is core logic, or the order of wrappers matters invisibly.
-- **Here:** Idempotency, auditing, metrics, retries around ports or the decision use case. Never swallow failures.
+- **Here:** Metrics, retries, caching around ports. Not for the idempotency lookup or the audit write: those are steps in the decision flow (ADR-0006). Never swallow failures.
 
 ### Facade
 [Explanation](https://refactoring.guru/design-patterns/facade) · [Java example](https://github.com/RefactoringGuru/design-patterns-java/tree/main/src/refactoring_guru/facade) · [TypeScript example](https://github.com/RefactoringGuru/design-patterns-typescript/tree/main/src/Facade)

@@ -63,14 +63,19 @@ Classes that know too much about each other.
 | [Inappropriate Intimacy](https://refactoring.guru/smells/inappropriate-intimacy) | A class reaches into another's internals. | Move Method/Field, Extract Class, Hide Delegate, Change Bidirectional Association to Unidirectional, Replace Inheritance with Delegation |
 | [Message Chains](https://refactoring.guru/smells/message-chains) | `a.getB().getC().getD()`. | Hide Delegate, Extract Method, Move Method |
 | [Middle Man](https://refactoring.guru/smells/middle-man) | A class that only forwards calls. | Remove Middle Man, Inline Method |
-| [Incomplete Library Class](https://refactoring.guru/smells/incomplete-library-class) | A library lacks what you need and you can't change it. | Introduce Foreign Method, Introduce Local Extension (in practice: wrap it in an adapter) |
 
 Here: adapters are thin by design, so a thin port adapter is not a Middle Man. A core class that knows a JPA entity or an HTTP DTO is Inappropriate Intimacy and breaks invariant 9.
+
+## Other smells
+
+| Smell | Signs | Usual cures |
+|---|---|---|
+| [Incomplete Library Class](https://refactoring.guru/smells/incomplete-library-class) | A library lacks what you need and you can't change it. | Introduce Foreign Method, Introduce Local Extension (in practice: wrap it in an adapter) |
 
 ## Project-specific smells (beyond the catalogue)
 - `double`/`float`/JS `number` holding money; `equals` on `BigDecimal`.
 - `Instant.now()`, `UUID.randomUUID()`, `Random`, `System.getenv()` or a framework annotation inside `core`.
-- Untrusted text compared, parsed or branched on outside the intent check.
+- Untrusted text compared, parsed or branched on outside the intent check and the suspicious-text detector (both may only raise caution).
 - A model or risk signal whose result can lower an outcome.
 - An exception used for an expected business outcome, or a `catch` that hides one.
 - Audit rows built from data other than the decision's actual inputs.

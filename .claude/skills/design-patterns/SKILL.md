@@ -1,6 +1,6 @@
 ---
 name: design-patterns
-description: When and how to use design patterns in this repo, from refactoring.guru (the 22 GoF patterns, with Java and TypeScript examples) plus DDD tactical patterns and hexagonal ports and adapters. Use PROACTIVELY, without being asked, whenever you write, change, refactor, review or delete code here that adds, reshapes or removes types, interfaces, ports, adapters, rules or object creation, and before introducing or removing any pattern.
+description: When and how to use design patterns in this repo, from refactoring.guru (the 22 GoF patterns, with Java and TypeScript examples) plus DDD tactical patterns and hexagonal ports and adapters. Use PROACTIVELY, without being asked, whenever you write, change, refactor, review or delete code here (Java, TypeScript, SQL, Python scripts, tests, spikes), and especially before adding, reshaping or removing types, interfaces, ports, adapters, rules, object creation or any pattern.
 ---
 
 # Design patterns
@@ -27,7 +27,7 @@ Before you add an interface, abstract class, factory, wrapper, event, or a secon
 |---|---|---|
 | Swap an algorithm or rule set behind one interface | **Strategy** | `if`/`switch` on a mode flag |
 | Change behaviour as a lifecycle moves (proposed → stepped-up → approved/declined → authorised → captured) | **State**, or a sealed type of states with transition methods | Status strings and scattered checks |
-| Run a sequence of independent checks, each able to stop or annotate | **Chain of Responsibility**, or a list of rules folded by a combiner | One long method |
+| Run a sequence of independent checks, each able to stop or annotate | **Chain of Responsibility**; for decision rules, always run every rule and fold the verdicts so every reason is recorded | One long method |
 | Talk to an external system (DB, rail, FX feed, LLM) without the core knowing it | **Adapter** behind a port (hexagonal) | Framework or SDK types in the core |
 | Add auditing, idempotency, retries, metrics or caching around a port | **Decorator** | Editing every adapter |
 | Give a subsystem one simple entry point | **Facade** (an application service) | Callers orchestrating many ports |
@@ -51,7 +51,7 @@ Illustrative, based on the draft model in [ADR-0006](../../../docs/adr/ADR-0006-
 - **Strategy for decision rules.** Each fixed rule is its own type behind one interface, returning a verdict with reasons. The combiner folds verdicts and can only raise caution (APPROVE < STEP_UP < DECLINE). A risk or model signal is just another input to that fold; no strategy can lower the outcome (invariant 2).
 - **Value objects** (DDD): `Money`, `IdempotencyKey`, `UntrustedText`, `Period`. Immutable `record`s, validated in the factory.
 - **Aggregates and repositories** (DDD): one aggregate per consistency boundary; repositories are ports, one per aggregate root.
-- **Decorator for cross-cutting port behaviour:** an idempotency decorator around the decision use case; an auditing decorator that writes every decision to the append-only log. They must not swallow failures.
+- **Decorator for cross-cutting adapter concerns:** metrics, retries, caching around a port. The idempotency lookup and the audit write are steps inside the decision flow (ADR-0006: idempotency lookup → … → audit record → only then an authorisation), not wrappers around it. Decorators must not swallow failures.
 - **Command + append-only log for replay** (invariant 8): the decision's inputs are stored as data so the decision can be recomputed.
 - **State (or a sealed state type) for lifecycles:** proposals, step-ups, authorisations, mismatch cases. Illegal transitions are unrepresentable or throw a named exception.
 - **Factory methods at the trust boundary:** untrusted input becomes a validated value or is rejected (parse, don't validate).
