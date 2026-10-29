@@ -1,6 +1,6 @@
 ---
 name: clean-code
-description: Clean-code and refactoring practice for this repo, from refactoring.guru (code smells, refactoring techniques) plus Fowler, Martin, Beck, Bloch and the project's own invariants. Use PROACTIVELY, without being asked, whenever you write, change, refactor, review, move or delete code here (Java, TypeScript, SQL, Python scripts, tests, spikes), before writing the first line and again before calling the change done.
+description: Clean-code, idiomatic-code and refactoring practice for this repo (Java, TypeScript, SQL, Python idioms), from refactoring.guru (code smells, refactoring techniques) plus Fowler, Martin, Beck, Bloch and the project's own invariants. Use PROACTIVELY, without being asked, whenever you write, change, refactor, review, move or delete code here (Java, TypeScript, SQL, Python scripts, tests, spikes), before writing the first line and again before calling the change done.
 ---
 
 # Clean code
@@ -8,6 +8,9 @@ description: Clean-code and refactoring practice for this repo, from refactoring
 Clean code is code another developer can read, change and trust without asking you. This skill says how to write it here and how to keep it that way. Pair it with the [design-patterns](../design-patterns/SKILL.md) skill when a change adds or reshapes types.
 
 Sources: [refactoring.guru: clean code, smells, techniques](https://refactoring.guru/refactoring); Fowler, *Refactoring* (2nd ed.); Martin, *Clean Code*; Beck's four rules of simple design; Bloch, *Effective Java* (3rd ed.); Evans, *Domain-Driven Design*; Cockburn, hexagonal architecture. The project's [CLAUDE.md](../../../CLAUDE.md) wins over this skill wherever they differ.
+
+## Links
+This skill and its references hold what you need. The links name the sources; don't fetch them by default. Fetch one only when a summary leaves you unsure.
 
 ## When to use it
 Every time an agent writes, updates, maintains or deletes code: production code, tests, migrations, scripts and throwaway spikes alike. Load it before you start, not after the review complains.
@@ -58,6 +61,13 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 - Composition over inheritance. Inheritance only for a real is-a with shared invariants.
 - Hexagonal (invariant 9): the core imports no framework, DB, HTTP, clock or random. Time, randomness, FX, storage and models come in through ports. Adapters translate; they hold no business rules.
 
+### Idioms
+- Write idiomatic code: each language the way its own experienced developers do, not another language's habits in its syntax. When code you're about to write feels awkward, there is usually an idiom for it.
+- Java: records for values, sealed types with exhaustive pattern-matching `switch`, static factories, immutable collections, `Optional` only as a return type, `BigDecimal` from `String` and never from `double`, try-with-resources, constructor injection.
+- TypeScript: strict, no `any` (`unknown` and narrow), discriminated unions with a `never` check, `readonly`, `const`, `??`/`?.`, `async`/`await` with no floating promises.
+- SQL: `numeric` money, `timestamptz`, constraints for invariants, explicit columns, bound parameters. Python: PEP 8, type hints, `pathlib`, `Decimal`.
+- Per-language detail in [idioms.md](references/idioms.md). A domain invariant beats an idiom; a settled convention in the surrounding code beats a personal preference.
+
 ### Errors
 - Named exception types per failure (`MandateNotConfirmedException`, `UnsupportedCurrencyException`), never bare `RuntimeException`/`Exception`.
 - Expected business outcomes (DECLINE, STEP_UP, an idempotency conflict) are values, not exceptions.
@@ -100,6 +110,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 ## Done checklist
 - [ ] Tests first, with the edge cases, property, Testcontainers and contract tests where CLAUDE.md asks for them; all green; the build passes formatting, static analysis and warnings.
 - [ ] No smell from [code-smells.md](references/code-smells.md) introduced; any you found and left are noted in the PR.
+- [ ] Idiomatic for its language ([idioms.md](references/idioms.md)).
 - [ ] Names match the glossary; no primitives for domain concepts; no `null` from public methods.
 - [ ] No duplication of knowledge; no speculative generality; no dead code.
 - [ ] Errors named, none swallowed; no PII or secrets in messages or logs.

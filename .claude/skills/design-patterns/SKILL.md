@@ -11,13 +11,16 @@ Sources: [refactoring.guru design patterns](https://refactoring.guru/design-patt
 
 **Licence:** the refactoring.guru example repositories are CC BY-NC-ND 4.0 (non-commercial, no derivatives) and the site text is copyrighted. Read them to understand a pattern; never copy or adapt their code or text into this repo. Write our own, test-first, to the quality bar.
 
+## Links
+This skill and its references hold what you need. The links name the sources; don't fetch them by default. Fetch one only when a summary leaves you unsure.
+
 ## When to use it
 Before you add an interface, abstract class, factory, wrapper, event, or a second implementation of anything; when a smell in [clean-code](../clean-code/references/code-smells.md) points at a pattern (Switch Statements → Strategy/State, Long Parameter List → Builder, Incomplete Library Class → Adapter); when you review or delete code that uses one.
 
 ## Workflow
 1. **State the problem in one sentence**, in domain words, without naming a pattern. ("Each decision rule must be testable alone and new rules must not change the combiner.")
 2. **Check the simplest thing first.** A function, a `record`, an enum, a sealed interface with a `switch`, or a lambda often solves it. Java 25 and TypeScript make several GoF patterns a few lines (Strategy is a functional interface; Visitor is often a `switch` over a sealed type; Iterator is built in).
-3. **Pick the pattern** from the table below or [catalog.md](references/catalog.md). Read its refactoring.guru page and the matching example in the Java or TypeScript repo.
+3. **Pick the pattern** from the table below or [catalog.md](references/catalog.md). The summaries are meant to be enough; open the refactoring.guru page or example (URL templates in the catalog) only if you're unsure what the pattern is or how to build it.
 4. **Name it in the code** using domain words, not pattern words: `DecisionRule`, not `RuleStrategy`; `AuditingSpendLedger`, not `SpendLedgerDecorator`. Mention the pattern in the class Javadoc only if it helps a reader.
 5. **Test it through its role:** one contract test suite per port, run against every adapter (quality bar); each strategy/state tested alone; decorators tested for what they add and that they delegate.
 6. **Record a significant choice** (a new port, a pattern that shapes a module) in the ADR for that area.
