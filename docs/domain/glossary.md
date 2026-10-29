@@ -1,28 +1,51 @@
 # Glossary (ubiquitous language)
 
-Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md). It gets refined in T-003.
+Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md) and [docs/architecture/](../architecture/README.md). It gets refined in T-003.
 
-- **Agent**: a registered AI shopping agent with an identity, a status and a link to a payment network (Mastercard, Visa or both). It searches, builds orders and proposes purchases. It can't pay without a Decision.
+- **Agent**: an instance of our shopping agent for one user (one per card or purpose), with an identity, a status, bound mandates and enrolled cards held as network token references. It searches, builds carts and proposes purchases. It can't pay without a Decision and never holds a credential.
+- **Agent harness**: our runtime around the user's chosen LLM: chat, shopping tools, mandate drafting, memory, trace. Untrusted; it reaches the control layer only through the control MCP server.
+- **Control MCP server**: the thin, stateless door from the agent harness to the control backend; a fixed list of typed tools. Confirming, approving and answering step-ups are not among them.
+- **Agent trace**: the searches, pages read, candidates and reasons behind a proposal. Untrusted data, kept for the audit export; it can only add caution.
 - **Payment network**: Mastercard and/or Visa agentic payment rails.
 - **Mandate**: the user's rules for what agents may do. Written in plain language, compiled into structured rules, shown back and active only after confirmation. Can be tightened at any time, never loosened silently.
 - **Mandate compiler**: an LLM-guided conversation that helps the user state their rules, asks clarifying questions, and compiles the result into structured hard rules (the mandate draft). It's an authoring aid only. It never takes part in a decision, and its output has no effect until the user confirms it.
 - **Mandate draft**: a compiled but not yet confirmed mandate. It has no effect.
-- **Purchase proposal / attempt**: an order an agent asks the control layer to approve.
+- **Purchase proposal / attempt**: an order an agent asks the control layer to approve: merchant, item ids, quantities, a `purchaseKey`, and the agent's own (untrusted) description.
+- **Merchant cart**: the priced cart a merchant returns through an agent checkout session (UCP, ACP, Mastercard Level 3), fetched by the backend. The only source of binding cart facts.
+- **Cart evidence tiers**: 1 the merchant cart; 2 product records the backend fetched from the merchant; 3 what the agent says. Auto-purchase needs tier 1 with every requirement settled by fixed rules ([ADR-0007](../adr/ADR-0007-cart-evidence-and-auto-purchase.md)).
+- **Checkout session**: a merchant-side session opened through a network agent protocol; it holds the cart and is completed with the single-use credential.
 - **Control layer**: the deterministic decision engine plus security checks between agents and payment.
 - **Decision**: `APPROVE`, `DECLINE` or `STEP_UP`, always with reasons. Logged append-only.
 - **Step-up**: a question to the user in the app for unclear cases (missing details, possible duplicate, split order). It doesn't count toward limits until approved.
 - **Risk signal**: an optional model output that may make a Decision more cautious, never less.
 - **Untrusted text**: any text from merchants or agents (descriptions, item details). It is data, never instructions.
 - **Base currency**: the currency limits are compared in. Configurable (brief: CZK; the leash test pack: CHF, see [starting-dataset](../data/starting-dataset.md)).
-- **Routing**: choosing, inside the decision, which of the user's allowed and unblocked payment methods pays, with the reason. No route means DECLINE.
+- **Route / routing**: the card and network a purchase will use, chosen by fixed rules in `payments` before the checkout session from the mandate's allowed cards, the user's preference order and the merchant's paths; recorded and re-validated by the decision, which can only decline it. No route means DECLINE.
 - **Reconciliation**: matching captured charges (later also settlement) against the decision and authorisation behind them.
-- **Payment method**: a card (network, last 4, token reference) or crypto wallet (chain, address, asset) the user added; ordered by preference; can be blocked at once.
-- **Rail**: the way a payment method is executed: Visa Intelligent Commerce, Mastercard Agent Pay, x402.
+- **Payment method**: a card the user enrolled for an agent (network, last 4, token reference); ordered by preference; can be blocked at once. Crypto wallets are a later feature (N6).
+- **Rail / payment network**: the agent programme a card is used through: Visa Intelligent Commerce or Mastercard Agent Pay.
+- **Network instruction**: the network-side object `payments` writes from a confirmed mandate (amount ceiling, merchant, category, expiry); the network's own enforcement, our "second line". Our decision stays authoritative.
+- **Credential**: the single-use payment credential the network issues for one approved purchase, requested by the trusted backend after APPROVE, passed to the checkout and never stored.
+- **Reservation**: the ledger's hold of an approved amount against a budget period; it becomes counted when the checkout completes and is released when it fails or is cancelled.
+- **Budget period**: one row per budget and period in the ledger, holding reserved and counted totals in the base currency; locked while a decision that may reserve runs.
+- **Merchant directory**: `payments`' list of merchants with an agent checkout path, which network and protocol, their endpoints and the mapping to the identifiers seen in authorisation and clearing; filled from the networks' merchant registries.
+- **Processor profile**: the request and response shapes, timeout and fallback of one bank processor's hook (Thredd-shaped, Enfuce-shaped, the bank's own).
 - **Global budget**: one budget all agents draw from, with its own period; a purchase may not exceed the smaller of it and the agent's own remaining limit.
 - **Intent check**: compares the user's rules with the proposed purchase, reading untrusted text; verdict matches, deviates or uncertain; it can only make a decision stricter.
 - **Suspicious-text flag**: set when untrusted text contains instructions; raises the decision to at least STEP_UP.
-- **Payment authorisation**: single-use permission bound to one approved decision, amount, merchant and method.
-- **Capture**: the charge as the issuer reports it, read from capture files.
-- **Mismatch case**: opened when a capture differs from what was approved; holds expected against actual and a drafted evidence package, never filed automatically.
+- **Authorisation**: the card network's authorisation of a charge, as the bank's hook or the network's confirmation reports it; the second leg of the three-way match. (The earlier term "payment authorisation" for our own single-use permission is superseded by **credential** and **pre-approval**.)
+- **Clearing**: the settled charge as the bank's feed reports it; the third leg of the three-way match. (Supersedes "capture" from the earlier capture-file design.)
+- **Mismatch case**: opened when an authorisation or clearing differs from what was approved; holds expected against actual and a drafted evidence package, never filed automatically.
 - **Audit log**: append-only record of every Decision with its inputs and reasons, which can be replayed.
+- **Pre-approval**: written in the same transaction as an APPROVE; what the hook responder matches an authorisation against (token, amount at or below, merchant, window, unused).
+- **Pre-approval consumption**: the hook responder's record that a pre-approval matched an authorisation; unique per pre-approval, so one pre-approval pays once.
+- **Checkout attempt**: the persisted state of paying for one approved decision (`CREATED`, `CREDENTIAL_REQUESTED`, `COMPLETING`, `PENDING_USER`, `COMPLETED`, `FAILED`, `UNKNOWN`, `CANCELLED`); at most one credential request per decision.
+- **DecisionInput**: everything a decision was based on, stored with it; replaying it through the pure core must return the same decision.
+- **Agent session token**: signed by the backend, short-lived, bound to cardholder, agent instance and audience; the only way an agent's identity reaches the control layer during a chat.
+- **Agent run token**: the same, issued when a standing mandate is confirmed and bound to it, for runs the user did not start; it dies with the mandate.
+- **Hook (authorisation hook)**: the bank processor's real-time call to an external URL for each card authorisation, waiting for approve or decline within its budget (800 ms to 2 s).
+- **Hook responder**: our service that answers the hook from pre-approvals, in shadow or enforcing mode.
+- **Shadow mode**: the hook responder records what it would answer without blocking anything.
+- **Outbox**: events stored as rows in the same transaction as the change that caused them, then delivered at least once to idempotent listeners.
+- **Intent model**: a model that answers fixed, typed questions about merchant product text, outside the pure core; it can find a problem, never clear one.
 - **Idempotency key**: identifies repeat deliveries of the same request, so they yield the same Decision once.

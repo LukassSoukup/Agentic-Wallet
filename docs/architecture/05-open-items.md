@@ -1,0 +1,24 @@
+# 05 Open items
+
+What this design leaves open, and what closes each item. Backlog items are in [backlog.md](../backlog.md).
+
+| Item | Why it is open | Closes it | Stand-in until then |
+|---|---|---|---|
+| Does Visa's agent checkout gateway return populated line items and totals in a UCP or ACP session? | known only from the published SDK models; no live response seen | T-034 (read the public UCP and ACP specs; one sandbox call once VIC access arrives) | the demo shop returns the cart as the specs describe it |
+| Mastercard Agent Pay sandbox access | the agent-side APIs need a company registered with Mastercard as a certified agent platform, or a partner bank's access | T-035 | a labelled simulator of Level 3 and Verifiable Intent from public specs |
+| Which model answers the intent check's typed questions | Jev (TypeSafe) fits the "typed questions, scored answers" shape; its deployment (EU, inside a bank), pricing, Java client and data retention are not yet known | T-036, then measured in the intent check and benchmark tasks | a fixture adapter |
+| Signing the agent's browsing requests (Visa TAP `agent-browser-auth`) | the signing key belongs in the trusted zone, but browsing happens in the harness | T-005 (options: a signing endpoint on `control-mcp` limited to the browse tag; or no browse signing until a merchant requires it) | no browse signing in the PoC |
+| The bank's processor, hook payload, timeout behaviour and clearing format | not public for Czech issuers | the first bank | Thredd- and Enfuce-shaped profiles; synthetic clearing files |
+| The bank's identity provider, claims and token lifetimes | first-bank item | the first bank | local accounts behind `CallerIdentity` |
+| Whether a bank-embedded agent counts as a "digital wallet" under Visa's agentic rules | needs the first bank and Visa | the first bank and Visa | nothing assumed |
+| Java MCP SDK coverage for the tool surface and streamable HTTP transport | to be verified | T-008 spike | — |
+| Merchant identity mapping between the registry id in the checkout session and the acquirer merchant id, descriptor and category code in authorisation and clearing | not public; differs per acquirer | the first bank's hook data in shadow mode; T-005 proposes the conservative rule | shadow mode only; demo shop uses one id everywhere |
+| The pre-approval window (how long after APPROVE an authorisation may match) | must cover the credential's validity and the merchant's authorisation delay; the network's credential lifetime is not public | T-005, then a sandbox run | a `settings` value, default seven days, equal to the credential TTL we request |
+| Merchants that authorise in several parts (per shipment) | one pre-approval matches one authorisation id | T-005 (option: one pre-approval per expected part, from the cart's fulfilment data) | shadow mode records them; enforcing mode would decline the later parts |
+| Cardholder assurance for the network instruction | the network wants proof of the cardholder's authentication when the instruction is created, and may hold it pending; our confirm screen is where that proof must come from | T-005 with the sandbox; the bank's passkey or app step later | local-account confirmation with a labelled assurance value in the sandbox; a mandate whose instruction is still pending cannot produce an APPROVE on that network |
+| The network instruction's amount ceiling is in one currency while the budget is in the base currency | FX moves between confirmation and purchase | T-005: compile a conservative ceiling (rounded down with a margin from `settings`); our decision stays authoritative | — |
+| Can our demo shop be reached through Visa's agent checkout gateway in the sandbox? | the gateway talks to merchants registered in Visa's registry; whether a sandbox merchant of ours can register is unknown | T-034, T-005 | call the demo shop's session endpoint directly through the same `Checkout` port, labelled "gateway bypassed" |
+| Memory caps for four JVMs, the simulators and PostgreSQL on the Pi | not measured | T-008, T-037 | explicit `-Xmx` per service |
+| A processor profile that carries only the cardholder's billing amount | the match compares transaction amount and currency; a billing-only profile needs a tolerance rule | that bank | not supported |
+| Retention and erasure of personal data in the insert-only audit store | deferred by the user (2026-10-29); the bank is the data controller; network rules ask for order confirmations for at least 120 days | a later ADR before the first bank; candidate: per-cardholder encryption of personal text, erasure by key deletion | keep everything; cardholder id on every audit row, personal text never in keys or hash inputs |
+| Audit export format accepted by a bank's compliance | first-bank item | the first bank | JSON Lines per event plus a per-purchase summary; hash chain if cheap |

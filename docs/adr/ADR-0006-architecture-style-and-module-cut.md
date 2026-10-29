@@ -1,0 +1,44 @@
+---
+id: ADR-0006
+status: proposed
+date: 2026-10-29
+tasks: ["T-033"]
+---
+# ADR-0006: Architecture style, deployables and module cut
+
+## Context
+We build the shopping agent as well as the control layer: an agent platform with a deterministic control layer between the agent and the money, delivered to banks (see [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md)). The agent talks to an LLM and reads untrusted shop text. The control layer must stay small, auditable and unreachable by a prompt injection. A decision, its ledger reservation, its audit record, its idempotency key and the bank's pre-approval must commit together (invariants 1, 5, 7, 8). The bank processor's authorisation hook leaves us about 300 ms at p99 and must work while the agent or the LLM is down. The same artefacts run in our EU cloud or inside a bank's perimeter, one bank per instance. One developer with AI agents builds it, on a Raspberry Pi, quality first. Already decided by the user: Java 25, Spring Boot, Spring AI with its MCP support, Maven, PostgreSQL, React and TypeScript; the agent reaches the control layer through an MCP server over a conventional backend. The full reasoning is in [docs/architecture/01-style.md](../architecture/01-style.md). Brainstorm with the user on 2026-10-29.
+
+## Options considered
+1. **Service-based system with a hexagonal modular-monolith backend and event-driven seams (chosen).**
+2. Two deployables only (harness and backend; MCP server and hook responder in process): fewest JVMs, but hook latency shares a JVM with everything else and the MCP surface is fenced by code checks only.
+3. Microservices (one service per bounded context, a broker between them): turns the ledger and idempotency invariants into sagas, about eight services to run on the Pi and in a bank, for one developer.
+4. A single monolith: puts the untrusted agent in the same process as the decision core.
+5. Layered architecture, microkernel, SOA, space-based as the top-level style: rejected in [01-style.md](../architecture/01-style.md); microkernel survives as a pattern for rules and network adapters inside modules.
+
+## Decision
+- **Deployables:** `agent-harness` (untrusted), `control-mcp` (thin boundary, no database), `control-backend` (trusted modular monolith), `hook-responder` (trusted, separate from day one), `web` (React SPA); simulators and the demo shop in a test profile only. Details: [02-system.md](../architecture/02-system.md).
+- **MCP tool surface:** read mandates, draft a mandate, propose a purchase, read a decision, read activity, read the agent's configuration (allowed models, LLM spend cap, agent status). **Confirming a mandate, answering a step-up, approving, starting a checkout and changing an agent's status are not tools**; they come only from the cardholder app to the backend, authenticated as the user, or from the backend's own events.
+- **Checkout runs in the trusted backend.** After an APPROVE, `payments` requests the single credential and completes the merchant's checkout itself. The harness and the LLM never hold a credential, a token or a checkout signing key.
+- **Control backend modules:** `identity`, `settings`, `agents`, `mandates`, `decisioning`, `ledger`, `payments`, `authorisation`, `reconciliation`, `audit`, `activity`, `notifications`, plus a small shared kernel. Card enrolment belongs to `payments`; `agents` stores the token reference from its event. Each owns its schema, publishes an API and events, and has its boundaries verified by Spring Modulith in a test. `control-core` mirrors the module packages, and an ArchUnit rule forbids imports between them there. Every terminal step-up outcome (approve, decline, expiry, revoke, stop) is a second decision with its own audit row. Details: [03-modules.md](../architecture/03-modules.md).
+- **Pure core as its own Maven module:** `control-core` (and `shared-kernel`) depend on nothing, so the compiler enforces invariant 9; ArchUnit is the second check. The hook responder reuses the core's pre-approval match rule.
+- **Transactions and concurrency** ([06-consistency.md](../architecture/06-consistency.md)): remote calls happen before or after the decision's transaction, never inside it. The decision, reservation, pre-approval, audit record with the full `DecisionInput`, and outbox rows commit in one transaction under `SELECT … FOR UPDATE` locks on the budget-period rows, taken in a fixed order. A step-up approval is a second decision, re-checked by `decisioning`. Checkout is a persisted attempt state machine: at most one credential request per decision, a timeout is `UNKNOWN` until resolved, and a failure cancels the pre-approval as well as the reservation. The hook responder consumes a pre-approval under a unique constraint, so one pre-approval matches one authorisation.
+- **Events:** a transactional outbox in PostgreSQL (Spring Modulith's event publication registry) for every follow-up after a commit; idempotent listeners. **No message broker in v1**; RabbitMQ is added behind the same outbox when a second process needs the events.
+- **Data:** one PostgreSQL with a schema and role per owner; **the control backend and the hook responder must share one instance**; the hook responder reads published views and writes only its own `hook` schema; the harness has its own database (it may be a separate instance) and no grant on control data; audit tables are insert-only by role and trigger. Retention and erasure of personal data are deferred to a later ADR; every audit row carries the cardholder id and personal text never enters a key or hash input, so that ADR touches only the storage adapter.
+- **Identity:** `identity` issues a signed, short-lived agent session token bound to cardholder, agent instance and audience; `control-mcp` forwards it verbatim; the backend verifies it on every call. Mutual TLS between `control-mcp` and the backend proves only which process is calling.
+- **Route and merchant calls** (approved by the user 2026-10-29): `payments` selects the card and network by fixed rules before it opens the checkout session; the decision records and re-validates the route and can only decline it. The backend calls merchants only at addresses from the networks' merchant registries, never at an address the agent supplied.
+- **Revocation and stop** (approved by the user 2026-10-29): open step-ups are declined, attempts that have not requested a credential are cancelled, attempts past that point run to their end.
+- **Standing mandates** (approved by the user 2026-10-29): an agent run token, issued at the mandate's confirmation and bound to it, lets the harness run without the user in chat; it dies with the mandate.
+- **Hook scope:** only authorisations on tokens we enrolled; anything else is "no opinion". Matching uses the transaction amount and currency. On a database outage the bank's configured fallback applies.
+- **Cross-process traffic:** web → harness (chat), web → backend (rules, answers, activity), harness → control-mcp (MCP, plus the trace and conversation ingest), control-mcp → backend (REST, contract in `control-api`), processor → hook-responder.
+
+## Consequences
+- \+ The decision path, the ledger and the audit log share one transaction; invariants 1, 5, 7 and 8 need no distributed coordination.
+- \+ The untrusted zone reaches the control layer through one stateless process with a fixed tool list; a prompt injection can at most propose a purchase.
+- \+ The hook responder's latency and availability are isolated from the harness, the LLM and the backend's load.
+- \+ A module can be extracted later without redesign; the outbox can feed a broker without changing producers.
+- − Four JVMs, the simulators and PostgreSQL on the Pi; each needs an explicit memory cap (T-008 and T-037 measure).
+- − The hook responder's dependency on the backend's database instance limits how a bank may split the deployment.
+- − The REST contract between `control-mcp` and the backend must be versioned and contract-tested.
+- − Opening a merchant checkout session before deciding is a side effect at the merchant (no payment; the session expires on its own).
+- Supersedes the module layout of [ADR-0001](ADR-0001-tech-stack.md) (`core`/`app`/`web`); the rest of the stack revision stays with T-004.

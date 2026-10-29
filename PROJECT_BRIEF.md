@@ -1,85 +1,95 @@
 # Project brief: Agentic Wallet
 
 ## Goal
-Build **Agentic Wallet**: a payment wallet for AI shopping agents. Registered AI agents, connected to the Mastercard and/or Visa agentic payment networks, find and buy products on the user's behalf. They also start, route and reconcile the payments that follow.
+Build **Agentic Wallet**: a shopping agent people can trust, because a deterministic control layer stands between the agent and the money. In a familiar chat the user tells the agent, running on the LLM they choose, what to buy and under which rules. The agent searches, recommends and buys through the card networks' agent programmes: Visa Intelligent Commerce and Mastercard Agent Pay. Nothing is paid unless the control layer approves it against the user's confirmed mandate. Every step is logged, so the user and their bank can see what was wanted, what was bought and why.
 
-Every purchase an agent proposes must first pass through a **control and security layer**. That layer checks the order against the user's rules and decides whether it goes ahead. The product is "AI agents that initiate, route and reconcile payments, plus fraud-aware agentic checkout".
+**The agent proposes, we decide, the issuer executes.** We never hold customer money, never see a card number, never invent a payment protocol and never let a model approve anything.
+
+## Position and channel
+- **We are the agent platform and the control layer.** We build the shopping agent ourselves (decided 2026-10-29), because an MCP provider sitting beside someone else's agent cannot own the step-up question or the approved purchase. Other agent hosts can use the same control-layer MCP server later.
+- **Delivered to banks first.** The cardholder uses it inside their bank's app under the bank's brand. The bank is the registered party on the networks, and we run under its programme membership and token requestor position. The bank gets the decisions, the reasons, the agent's trace and the cart. Its own authorisation hook is an extra check, and it controls the agent: shadow mode, kill switch, which models are allowed, deployment inside its perimeter.
+- **Standalone later,** once we can register with the networks ourselves and the programmes open to consumers. The cardholder app stays separable from any bank shell.
+- **Two lines of defence, three where a bank integrates:** our decision before any credential exists; the network's own enforcement of the limits we compile into its instruction; the bank processor's real-time authorisation hook, matched to our pre-approval.
 
 ## Core concepts
+**1. The agent (our harness).** A chat with a model picker (our gateway's model list; a bank may restrict or replace it), shopping tools, a guided mandate conversation and a memory of past purchases, merchants and habits. The agent and everything it reads are untrusted. It reaches the control layer only through a fixed set of MCP tools and never holds a card token or payment credential.
 
-**1. Agents**
-- A registry of AI shopping agents, each with an identity, a status and a link to a payment network (Mastercard, Visa or both).
-- Agents search, build orders and propose purchases. They can't pay without a decision from the control layer.
-- After an approved purchase, the agent's payment is routed and later reconciled against settlement data.
+**2. Mandates.** The user describes what the agent may do in plain words: budget and period, allowed merchants, what to buy and its must-haves, when and how often, expiry. The agent drafts structured rules and shows them back. They apply only after the user confirms that exact version on the confirm screen, which the agent cannot press. Rules can be tightened at any time, never loosened silently. Memory and habits may lead to a question, never to a permission.
 
-**2. User rules (mandates)**
-- The user describes what agents may do in plain words, for example "at most 5 000 CZK a week, only shops I've bought from before, delivery only, one item per order".
-- The system turns this into structured rules, shows them back and applies them only after the user confirms.
-- Rules can be made stricter at any time but are never loosened quietly. Preferences and past behaviour may lead to a question, never to a permission.
+**3. Decisions.** For each proposed purchase the control layer answers **Approve**, **Decline** or **Step up** (ask the user in the app), always with reasons. Fixed, testable rules decide. A model or risk signal may only make a decision more cautious.
 
-**3. Decisions**
-For each proposed purchase the control layer returns one of three answers, each with a short reason:
-- **Approve:** the order fits all rules.
-- **Decline:** it breaks a rule, such as a spending limit or an unfamiliar shop.
-- **Step up:** the case is unclear (missing details, a possible duplicate or a split order), so the user confirms in the app.
+**4. The cart, and when we can buy without asking.** No card network gives anyone the merchant's cart, and the agent's own account of it is untrusted. So the backend opens the checkout session with the merchant itself and decides on the cart the merchant returns. **A purchase goes ahead without asking only when fixed rules over the merchant's cart settle every requirement in the mandate.** When the cart leaves a requirement open (the merchant sends a title but not the size), the user is shown that cart and asked. A merchant that offers no agent checkout session at all cannot be bought from: there is no cart to decide on and no way to pay, so the answer is "can't buy here", never a question. A broken limit is a decline either way. Today that means buying only at the few merchants that run protocol checkout sessions.
 
-**4. Fraud-aware checkout**
-- Decisions come from fixed, testable rules. An AI model may flag a risk and make a decision more cautious, but it can never turn a decline or a question into an approval.
-- Text from shops and agents is untrusted, so it can't change rules. This defends against hidden instructions in product descriptions.
-- Only approved purchases count toward limits. Foreign currencies are converted to CZK before comparison. Repeat deliveries of the same request are handled idempotently.
-- Every decision is logged with its reasons, so it can be audited and replayed.
+**5. Checkout and payment.** Checkout happens only through the networks' agent protocols: Visa's agent checkout gateway (UCP and ACP sessions, with Trusted Agent Protocol signatures where the merchant requires them) and Mastercard Agent Pay Level 3 with Verifiable Intent. Never by filling a web form or automating a browser. A merchant outside those paths gets "can't buy here". After an approval, the trusted backend requests one single-use credential for exactly that amount and merchant, completes the checkout and discards the credential.
 
-## Direction and features
-The strategist's handoff is the source of truth for **direction and features**, and wins over this brief where they differ (decided 2026-10-17). It lives in `~/IdeaProjects/leash-analysis/wallet_control_handoff/`: read it there, never copy it into this repo, and don't edit it (the strategist maintains it). Feature IDs (`M1`…, `N1`…) come from it; use them in issues, PRs and commits. The domain invariants and the quality bar in [CLAUDE.md](CLAUDE.md) still bind every change, and its ≈26 Dec 2026 decision gate may cut scope, never quality.
+**6. Fraud-aware and auditable.** Text from shops and agents is data and never changes rules; hostile text leads at least to a question. Only approved purchases count toward limits. Foreign currencies are converted to the base currency before any comparison. Repeated delivery of the same request is handled idempotently. Every decision, and the whole thread from the user's first prompt to the purchase, is logged append-only, replayable and exportable.
 
-Files as read on 2026-10-25 (a changed hash means the handoff moved on; re-read it):
+**7. Reconciliation.** What we approved is matched against the authorisation and the clearing. Mismatches open a case with drafted dispute evidence. Money that settled without our approval (network stand-in, over-capture) is recorded and flagged.
 
-| File | SHA-256 |
+## Features
+Feature IDs are used in issues, PRs and commits. Defined here since 2026-10-29; they keep the numbering of the earlier strategist handoff, which this brief replaces. Ids not listed (V4–V8, N10) were dropped.
+
+| ID | Feature |
 |---|---|
-| `README.md` | `2d4330b3d06ffe378ae9c5957a86e808efeca445793f03b40f6d641067ea172c` |
-| `01-direction.md` | `c058a855f96c679c821103550ce054a6c33353903435fc298f8e2edd339ac633` |
-| `02-features.md` | `12b576d6905eb7d6f64fbac8f933d8d220c611f4bde7b47ce3ea671dd1a2816f` |
-| `03-constraints-and-open-questions.md` | `e3a9c458acb56faa44393729fa2f8fa5507a0d717e39b5f70ee696bc7e64cd81` |
-| `design/README.md` | `9ece2e56d2002c8fc2c92226794e801cbfc00c5ed8725dfbbc49c4cfe0a6e833` |
-| `design/01-users-and-surfaces.md` | `5e925e9c036e4ec41724839fb5f3efaed003311ac94117f0d3126b54f4200094` |
-| `design/02-principles-and-visual-system.md` | `ff8f7325cd942e99498d7af6cb7980613c938d941a1d8ddaf270b5e2ca099337` |
-| `design/03-journeys.md` | `74767e701ea7dea4e6f15f2267eb0168b6c7477de9c24447a580ce65cadb1e2d` |
-| `design/04-screens-and-states.md` | `43c4a83803e2b04877468fcd7644f8f5ae836be79ea6e0b6beef7afad6e81a44` |
-| `design/05-words-and-content.md` | `0c72e491d262bb7c43bdcfd46a383be287e5c9e7076e03839db2870b66500786` |
-| `design/06-data-per-screen.md` | `0036cc8c55c7abe9afd73d70edd8625d749a8cb7fbd7347424d688a91710e57d` |
-| `design/07-claude-design-prompts.md` | `1911464ecf16e6e4a6895f313e06d0747dfe90b68a634ba6a3ce54af611da0f7` |
-| `design/08-open-design-questions.md` | `e3a7f9ff666bba7514347e9920ce5d8b208d28d81688b08533d3cd196e960b63` |
+| V1 | Chat with the LLM the user picks from the allowed list; spend cap per user |
+| V2 | Shopping agent: searches anywhere, buys only where a network agent checkout exists |
+| V3 | Memory of purchases, merchants and habits, as a ranking input only (minimal in v1) |
+| M1 | Agent registry: the user's agent instances, status, bound mandates, enrolled cards as token references, stop switch |
+| M2 | Mandate capture: words → draft → shown back → active only after confirmation; tighten any time; revoke at once |
+| M3 | Decision engine: approve, decline or step up with reasons; fixed rules; a model only adds caution; missing data is never permission |
+| M4 | Ledger: only approved purchases count; exact decimals, half-even; idempotent; duplicate and split orders caught |
+| M5 | Ask the user: one specific question, one-tap answer, re-check before paying, decline on expiry, never invent the answer |
+| M6 | Append-only audit log of decisions with inputs and reasons, plus the conversation and the agent trace; replayable, exportable |
+| M7 | Approved payment only: one single-use credential per approval, bound to amount and merchant, never stored |
+| M8 | Routing: the card and network chosen by fixed rules before the checkout session, within what the user allowed, recorded and re-validated by the decision with the reason |
+| M9 | Three-way match: decision, authorisation, clearing |
+| M10 | Mismatch detection: different amount, captured twice, one-off became recurring, refund missing, charge with no decision |
+| M11 | Mismatch case with expected against actual and drafted dispute evidence, never filed automatically |
+| M12 | Chat for rules: set, tighten, revoke (through the confirm screen) |
+| M13 | Chat for questions, answered only from the log, linking to the decisions it cites |
+| M14 | Chat safety: chat can never loosen a rule or approve a payment |
+| M15 | Activity list with honest states and a detail page per purchase: mandate version, decision, reasons, agent trace, cart, payment state |
+| M16 | Benchmark against a plain frontier-model prompt on hostile shop text and reconciliation cases; if the prompt comes within about 5 points, the direction is reconsidered |
+| M17 | Data behind adapters: the starting dataset, network and processor simulators, a demo shop, synthetic cases |
+| M18 | Intent check: does the cart match what the user meant (wrong size, add-ons, lookalikes, return terms); matches, deviates or uncertain; only ever stricter |
+| N15 | Bank operations console: per-cardholder mandates, decisions and traces; shadow mode; kill switch; rates and latency (minimal in v1) |
+| V9 | Price watch: a standing mandate that buys when a price drops (after v1) |
+
+Later or nice-to-have, unchanged in meaning: N1 ask over WhatsApp or Telegram · N2 voice · N3 "approve and remember" as a narrower permanent rule · N4 rule templates · N5 instant bank-transfer rail through a licensed partner only · N6 crypto rail (x402) · N7 rail cost comparison · N8 auto-filing chargebacks · N9 subscription tracker · N11 risk score from public fraud datasets (caution only) · N12 agent reputation and anomaly alerts · N13 per-agent budgets, shared wallets · N14 weekly digest · N16 developer portal · N17 passkey or 3-D Secure for asking · N18 Czech and English UI, accessibility.
+
+**Don't build:** holding customer money; our own payment protocol; any AI-made approval or any path where chat loosens a rule; company-agent spend management; form filling or browser automation at checkout.
+
+## Architecture
+A service-based system: an untrusted **agent harness**, a thin **control MCP server**, a trusted **control backend** built as a hexagonal modular monolith, and a separate **hook responder** for the bank's real-time authorisation call. One PostgreSQL instance for the control backend and the hook responder, a schema per module and a role per deployable; the harness has its own database; events through a transactional outbox, no broker in v1. Each bank gets its own instance, in our EU cloud or inside the bank's perimeter. Details: [docs/architecture/](docs/architecture/README.md), [ADR-0006](docs/adr/ADR-0006-architecture-style-and-module-cut.md), [ADR-0007](docs/adr/ADR-0007-cart-evidence-and-auto-purchase.md).
+
+## Proof of concept by 26 December 2026
+A working application outside any bank, good enough to lead sales:
+- sandbox cards;
+- Visa through the live Cybersource sandbox;
+- Mastercard through a labelled simulator until we have sandbox access;
+- our own demo shop as the merchant;
+- the hook responder in shadow mode against a processor simulator;
+- the control layer, the audit export and the M16 benchmark;
+- the cardholder app as a standalone web app with local accounts.
+
+The date may cut scope, never quality. A signed bank pilot is the goal for 2027.
 
 ## Data
-- The project will eventually use realistic payment, banking and back-office datasets, including a **TSYS sandbox**. These aren't available yet.
-- **Starting dataset:** a ready-made pack of customers, cards, accounts, merchants, items, FX rates, authorization history and purchase attempts is at:
+- The project will eventually use realistic payment, banking and back-office data from a bank partner. None is available yet.
+- **Starting dataset:** a ready-made pack of customers, cards, accounts, merchants, items, FX rates, authorisation history and purchase attempts, at:
 
   `data/raw/leash-starter/` (copied from `~/IdeaProjects/leash/data/`, hashes in its `metadata.json`)
 
-  Start with `data_dictionary.md` and `schemas/`. Treat this folder as **read-only input data only**. Use nothing else from the `leash` repository: no code, docs, design or architecture. Design this project independently.
-- If more data is needed, look for **realistic public datasets**, for example:
-  - PaySim (mobile money transactions)
-  - IEEE-CIS Fraud Detection
-  - Credit Card Fraud Detection (ULB)
-  - Sparkov-generated card transaction datasets
+  Start with `data_dictionary.md` and `schemas/`. Treat this folder as **read-only input data only**. Use nothing else from the `leash` repository: no code, docs, design or architecture.
+- If more data is needed, look for **realistic public datasets** (PaySim, IEEE-CIS Fraud Detection, Credit Card Fraud Detection (ULB), Sparkov). Check their licences first. Fill any remaining gaps with our own synthetic data, always labelled.
+- All data access goes behind interfaces, so a bank's real feeds are one more adapter.
+- Amounts use exact decimal types; the base currency is configurable (CZK for the product); other currencies are converted before comparison.
 
-  Check their licences and availability first. Fill any remaining gaps with our own synthetic data.
-- Put all data access behind interfaces, so switching to the TSYS sandbox later only means adding a new adapter.
-- Amounts use exact decimal types, with CZK as the base currency. Data in other currencies is converted.
-
-## Tech stack (open for debate)
-- Preferred: **Java** (Spring Boot), **Hibernate/JPA**, **PostgreSQL**.
-- Other choices are welcome if they fit better. Give a short recommendation with trade-offs before committing.
-- Requirements: a clean separation between pure decision logic and infrastructure (hexagonal or ports-and-adapters), test-first development, and a database schema that supports an append-only audit log.
+## Tech stack (decided 2026-10-29; details in T-004)
+Java 25, Spring Boot, Spring AI with its MCP server and client, Maven, PostgreSQL with Flyway migrations and Hibernate/JPA in persistence adapters only, Spring Modulith; React and TypeScript for the cardholder app and console; JUnit, Mockito, jqwik, Testcontainers, ArchUnit; SonarQube or SonarCloud, GitHub Issues and GitHub Actions. The decision core is a pure Java module with no framework, database, HTTP, clock or random dependency.
 
 ## Trade-offs we accept
-Predictability and safety come before convenience. Unclear cases go back to the user more often, and agents can't complete purchases their rules don't cover.
+Predictability and safety come before convenience. Unclear cases go back to the user more often: every free-text requirement the merchant's cart cannot settle. Merchants without an agent checkout session are out of reach. The agent can't complete purchases its rules don't cover. Reach grows with the networks' merchant programmes, not with our engineering.
 
-## What to do first
-1. Ask any clarifying questions that would change the design.
-2. Propose the tech stack, with reasoning.
-3. Propose a high-level architecture and domain model: agents, mandates, purchases, decisions, payments and reconciliation.
-4. Propose a data plan: how to use the starting dataset, which public datasets to add and what to generate synthetically.
-5. Propose a milestone plan, starting with a small end-to-end slice: one agent, one mandate and one purchase decision.
-
-Don't write production code until the plan is agreed.
+## What to do next
+The planning items in [docs/backlog.md](docs/backlog.md), in its order: stack and conventions (T-004), toolchain (T-008), a walking skeleton that confirms the architecture on the Pi (T-037), domain model and contracts (T-003), payment networks (T-005), the checks in T-034 to T-036, data (T-006), milestones (T-007). Don't write production code until the plan is agreed.
