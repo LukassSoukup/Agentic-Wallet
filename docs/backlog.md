@@ -1,6 +1,6 @@
 # Backlog
 
-One list, top to bottom in order. Each item becomes one branch and one PR; delete it from here in that PR when it's done. Ids are `T-NNN`, numbered in order of creation and never reused; the branch is `t-NNN-<slug>` and each commit starts with `T-NNN: `. **Next free id: T-033** (raise it in the PR that adds an item). Done: T-001 clean-code and design-patterns skills, T-002 this numbering. Commits and PR #1 before T-002 still carry the earlier id `TASK-075` (= T-001); `main` is not rewritten.
+One list, top to bottom in order. Each item becomes one branch and one PR; delete it from here in that PR when it's done. Ids are `T-NNN`, numbered in order of creation and never reused; the branch is `t-NNN-<slug>` and each commit starts with `T-NNN: `. **Next free id: T-033** (raise it in the PR that adds an item). Finished items live on in git history and PR titles. T-001 (clean-code and design-patterns skills) shipped before this numbering, as `TASK-075` in its commits and PR #1; `main` is not rewritten. T-002 is the task and ADR renumbering.
 
 ## Now: planning (no production code until these are agreed)
 

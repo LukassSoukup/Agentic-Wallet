@@ -9,7 +9,7 @@ tasks: []
 > **Re-opened 2026-10-23:** narrowed to the demo epic. To be superseded by the ADR of T-003 (owner and caller identity, Settlement and Refund, `RiskSignal`, `ScenarioSource` placement).
 
 ## Context
-Narrowed to what the hackathon demo epic needs (user, 2026-10-18). Stack and modules per [ADR-0001-tech-stack](ADR-0001-tech-stack.md): `core` (pure), `app` (Spring adapters, REST + SSE), `web` (React + TypeScript). Invariant 9.
+This model is narrowed to what the hackathon demo epic needs (user, 2026-10-18). Stack and modules per [ADR-0001-tech-stack](ADR-0001-tech-stack.md): `core` (pure), `app` (Spring adapters, REST + SSE), `web` (React + TypeScript). Invariant 9.
 
 ## Options considered
 1. **One pure decision core with ports (chosen).** Every input (mandate, ledger, history, agents, methods, FX, clock, LLM) arrives through a port; the core returns a decision value; adapters persist and execute.

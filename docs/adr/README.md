@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-One file per product decision: `ADR-NNNN-<slug>.md`, from `_template.md`. Status: `proposed` → `accepted` (after the user agrees) → possibly `superseded by ADR-…`. Never edit the decision text of an accepted ADR; supersede it with a new one. Numbered in order from ADR-0001, never reused; **next free number: ADR-0006**. `tasks:` lists the `T-NNN` items from [backlog.md](../backlog.md) that produced the ADR.
+One file per product decision: `ADR-NNNN-<slug>.md`, from `_template.md`. Status: `proposed` → `accepted` (after the user agrees) → possibly `superseded by ADR-…`. Never edit the decision text of an accepted ADR; supersede it with a new one. Numbered in order from ADR-0001, never reused; **next free number: ADR-0006**. Renumbered once in T-002 (ids and references only, no decision text changed). `tasks:` lists the `T-NNN` items that produced the ADR; open ones are in [backlog.md](../backlog.md), finished ones in git history and PR titles.
 
 | ADR | Title | Status |
 |---|---|---|
