@@ -1,11 +1,11 @@
 # Pattern catalogue
 
-The 22 patterns on [refactoring.guru](https://refactoring.guru/design-patterns/catalog), grouped as there. For each, our own notes on when to use it, when not, and how it fits this project. They are usually enough.
+The 22 patterns on [refactoring.guru](https://refactoring.guru/design-patterns/catalog), grouped as there. For each, our own notes on when to use it, when not, and how it fits this project. They are usually enough. The "Here" notes are illustrative until TASK-003 settles the model.
 
 Only if you're unsure what a pattern is or how it's built, look it up (pattern name in the case shown):
 - Explanation: `https://refactoring.guru/design-patterns/<kebab-case>`, e.g. `chain-of-responsibility`.
 - Java example: `https://github.com/RefactoringGuru/design-patterns-java/tree/main/src/refactoring_guru/<snake_case>`.
-- TypeScript example: `https://github.com/RefactoringGuru/design-patterns-typescript/tree/main/src/<PascalCase>`. The "Here" notes are illustrative until TASK-003 settles the model.
+- TypeScript example: `https://github.com/RefactoringGuru/design-patterns-typescript/tree/main/src/<PascalCase>`.
 
 The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt their code into this repo. In the Java repo each pattern has an `example` package; in the TypeScript repo, `Conceptual` and often `RealWorld` folders.
 

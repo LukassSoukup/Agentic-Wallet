@@ -51,7 +51,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 - **Make illegal states unrepresentable.** Validate in constructors and factories; once built, a value is valid. Parse, don't validate: untrusted input becomes a typed value at the edge or is rejected there.
 - Value objects for domain primitives: `Money`, `Currency`, `IdempotencyKey`, `AgentId`, never raw `String`/`BigDecimal`/`long` crossing a method boundary (Primitive Obsession).
 - Immutable by default: Java `record`s, `final` fields, `List.copyOf`; TypeScript `readonly`. Mutability needs a reason.
-- Model closed sets as enums or sealed types (`Outcome = APPROVE | DECLINE | STEP_UP`), and switch over them exhaustively so the compiler finds the missing case.
+- Model closed sets as enums or sealed types (`Outcome = APPROVE | DECLINE | STEP_UP`), and branch with an exhaustive `switch` expression (no `default`) so the compiler finds the missing case.
 - Encapsulate collections; never hand out a mutable internal list.
 
 ### Classes and modules
@@ -63,7 +63,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 
 ### Idioms
 - Write idiomatic code: each language the way its own experienced developers do, not another language's habits in its syntax. When code you're about to write feels awkward, there is usually an idiom for it.
-- Java: records for values, sealed types with exhaustive pattern-matching `switch`, static factories, immutable collections, `Optional` only as a return type, `BigDecimal` from `String` and never from `double`, try-with-resources, constructor injection.
+- Java: records for values, sealed types with an exhaustive `switch` expression (a plain `switch` statement over an enum isn't checked), static factories, immutable collections, `Optional` only as a return type, `BigDecimal` from `String` and never from `double`, try-with-resources, constructor injection.
 - TypeScript: strict, no `any` (`unknown` and narrow), discriminated unions with a `never` check, `readonly`, `const`, `??`/`?.`, `async`/`await` with no floating promises.
 - SQL: `numeric` money, `timestamptz`, constraints for invariants, explicit columns, bound parameters. Python: PEP 8, type hints, `pathlib`, `Decimal`.
 - Per-language detail in [idioms.md](references/idioms.md). A domain invariant beats an idiom; a settled convention in the surrounding code beats a personal preference.

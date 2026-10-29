@@ -2,11 +2,11 @@
 
 Write each language the way its own experienced developers do, not another language's style translated into it. Where an idiom conflicts with a domain invariant (JS `number` for money, say), the invariant wins. Where the surrounding code already has a settled convention, match it. Stack per [ADR-0005](../../../../docs/adr/ADR-0005-tech-stack.md) until TASK-050 revises it.
 
-Sources: Bloch, *Effective Java* (3rd ed.); the Java Language Specification and JEPs; the TypeScript Handbook and typescript-eslint recommended rules; the PostgreSQL manual; PEP 8 and PEP 20.
+Sources: Bloch, *Effective Java* (3rd ed.); the Java Language Specification and JEPs; the TypeScript Handbook and typescript-eslint's `strict-type-checked` config (type-aware rules such as `no-floating-promises` are not in plain `recommended`); the PostgreSQL manual; PEP 8 and PEP 20.
 
 ## Java 25
-- **Values are `record`s.** Validate and normalise in the compact constructor (`Objects.requireNonNull`, scale and range checks); equals/hashCode come free.
-- **Closed sets are enums or `sealed` interfaces.** Branch with a pattern-matching `switch` that lists every case and has no `default`, so a new case is a compile error.
+- **Values are `record`s.** Validate and normalise in the compact constructor (`Objects.requireNonNull`, scale and range checks); equals/hashCode come free, but a `BigDecimal` component compares by scale (`10.0` ≠ `10.00`), so `Money` fixes the scale in its compact constructor to keep record equality in line with `compareTo`.
+- **Closed sets are enums or `sealed` interfaces.** Branch with a `switch` *expression*, or a pattern `switch` over a sealed type, that covers every case with no `default`: then a new case is a compile error. A plain `switch` *statement* over an enum is not checked for exhaustiveness, so don't use one for decision outcomes.
 - **Pattern matching** over casts: `if (x instanceof Money m)`, record deconstruction patterns in `switch`.
 - **Static factories** named `of`, `from`, `parse`, `valueOf` over public constructors when creation validates, caches or picks a subtype.
 - **Immutable collections:** `List.of`, `Map.of`, `List.copyOf` for defensive copies; `Stream.toList()`. `EnumMap`/`EnumSet` for enum keys.
@@ -42,4 +42,4 @@ Sources: Bloch, *Effective Java* (3rd ed.); the Java Language Specification and 
 ## Python (scripts)
 - PEP 8; type hints on functions; `pathlib.Path` over string paths; `with` for files.
 - f-strings; `argparse` for CLIs; `if __name__ == "__main__":` entry point; standard library first.
-- `decimal.Decimal` for money; no bare `except:`; exit non-zero on failure with a clear message.
+- `decimal.Decimal` for money, built from `str`, never from `float`, and quantized with `ROUND_HALF_EVEN`; no bare `except:`; exit non-zero on failure with a clear message.

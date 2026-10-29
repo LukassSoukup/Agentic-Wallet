@@ -1,6 +1,6 @@
 # Refactoring techniques
 
-The refactoring.guru catalogue ([techniques](https://refactoring.guru/refactoring/techniques)), grouped as there, each with a one-line "use when" of our own. The summary is usually enough. Only if you're unsure how to carry a technique out, open `https://refactoring.guru/<name>`: the name in lowercase, with spaces and `/` replaced by `-` (e.g. `replace-type-code-with-state-strategy`). Every technique is a behaviour-preserving change done in small steps with the tests green after each one.
+The refactoring.guru catalogue ([techniques](https://refactoring.guru/refactoring/techniques)), grouped as there, each with a one-line "use when" of our own. The summary is usually enough. Only if you're unsure how to carry a technique out, open `https://refactoring.guru/<name>`: the name in lowercase, with spaces and `/` replaced by `-` (e.g. `replace-type-code-with-state-strategy`). Where a line joins techniques with " / ", each is a separate technique with its own page. Every technique is a behaviour-preserving change done in small steps with the tests green after each one.
 
 Marked ★: the ones we expect to use most in this codebase.
 
