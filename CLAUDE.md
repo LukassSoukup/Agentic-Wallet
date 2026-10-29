@@ -28,6 +28,7 @@ Quality first, no rapid development.
 
 ## How we work
 - One task = one branch = one PR into `main`. `main` is protected: CI must be green, nothing is pushed to it directly. The user approves by merging the PR.
+- Any agent that writes, changes, refactors, reviews or deletes code (spikes and tests included) loads the [clean-code](.claude/skills/clean-code/SKILL.md) and [design-patterns](.claude/skills/design-patterns/SKILL.md) skills first, unasked. When you start a subagent for code work, tell it to load them.
 - Before opening a PR, run the `reviewer` agent on the branch and fix what it finds.
 - Backlog: [docs/backlog.md](docs/backlog.md). Decisions: [docs/adr/](docs/adr/README.md). Language: [glossary](docs/domain/glossary.md).
 - Docs link with relative Markdown links (they work on GitHub, in the IDE and in Obsidian). No wikilinks.

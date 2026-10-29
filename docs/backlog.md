@@ -1,6 +1,6 @@
 # Backlog
 
-One list, top to bottom in order. Each item becomes one branch and one PR; delete it from here in that PR when it's done. Ids are kept from the old `wallet_control` repo (archived, read-only) so its cards stay findable; new items continue at TASK-075.
+One list, top to bottom in order. Each item becomes one branch and one PR; delete it from here in that PR when it's done. Ids are kept from the old `wallet_control` repo (archived, read-only) so its cards stay findable; new items continue at TASK-076.
 
 ## Now: planning (no production code until these are agreed)
 
