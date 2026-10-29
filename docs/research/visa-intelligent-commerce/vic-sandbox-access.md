@@ -46,4 +46,4 @@ Suggested message: "Sandbox org `<org id>`: please create a TMS vault with Visa 
 
 ## Where they live
 - Values only in the local `.env`; key files outside git (`.env`, `*.pem`, `*.key` are git-ignored). Never in docs, logs, fixtures or the audit log.
-- The setting names and how the adapter loads them are decided in TASK-034; its gate is "Visa developer sandbox credentials are in the local .env".
+- The setting names and how the adapter loads them are decided in T-028; its gate is "Visa developer sandbox credentials are in the local .env".

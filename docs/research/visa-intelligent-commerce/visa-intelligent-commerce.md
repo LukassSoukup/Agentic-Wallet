@@ -2,7 +2,7 @@
 
 What we know about Visa Intelligent Commerce (VIC) as it is offered through Cybersource, its sandbox, and how this project uses it. Start here.
 
-Started 2026-10-23 in TASK-051. The rail itself is TASK-034. The network comparison stays in [payment-networks](../payment-networks.md).
+Started 2026-10-23. The rail itself is T-028. The network comparison stays in [payment-networks](../payment-networks.md).
 
 ## Pages
 | Page | What it holds |

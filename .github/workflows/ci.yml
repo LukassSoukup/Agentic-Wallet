@@ -21,4 +21,4 @@ jobs:
           persist-credentials: false
       - name: raw data unchanged
         run: python3 scripts/data_check.py
-      # TASK-006 adds the build and tests here (./gradlew check).
+      # T-008 adds the build and tests here (./gradlew check).

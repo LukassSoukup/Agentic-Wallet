@@ -4,7 +4,7 @@ Payment wallet for AI shopping agents with a deterministic control & security la
 Intent: [PROJECT_BRIEF.md](PROJECT_BRIEF.md). Direction and features (M1…, N1…): the strategist handoff it points to, which wins on direction.
 
 ## Current phase
-**Planning.** No production code until the plan is agreed: TASK-003 (architecture and domain model), TASK-050 (stack), TASK-007 (payment networks), TASK-004 (data), TASK-005 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
+**Planning.** No production code until the plan is agreed: T-003 (architecture and domain model), T-004 (stack), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
 
 ## Domain invariants (never violate; the reviewer checks every one)
 1. No payment without a control-layer decision. Decisions are exactly `APPROVE | DECLINE | STEP_UP`, each with reasons.
@@ -21,7 +21,7 @@ Intent: [PROJECT_BRIEF.md](PROJECT_BRIEF.md). Direction and features (M1…, N1�
 Quality first, no rapid development.
 - No choice is justified by a deadline, a demo or speed. Trading quality for speed needs the user's explicit decision.
 - Done means tested: a test per rule with its edges (at the limit, one cent over, foreign currency, duplicate delivery, injected text, pending step-up); property tests for money and the decision combiner; a Testcontainers test per DB adapter; one shared contract suite per port with more than one adapter.
-- The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core` (set by the user, TASK-006).
+- The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core` (set by the user, T-008).
 - No `TODO`/`FIXME` without an issue; no unexplained suppressions; named errors, no swallowed exceptions.
 - Every public port in `core` has a contract comment: inputs, failure modes, idempotency.
 - Dependencies pinned and checked for known vulnerabilities. Simulated/synthetic data is always labelled. Generated code (e.g. Claude Design output) is a reference, rebuilt to this bar.
@@ -41,7 +41,7 @@ Quality first, no rapid development.
 
 ## Commands
 - Data check: `python3 scripts/data_check.py`
-- Build and test: none yet (TASK-006 sets up the toolchain; add the commands here then).
+- Build and test: none yet (T-008 sets up the toolchain; add the commands here then).
 
 ## Environment
 Raspberry Pi 5 (aarch64, 16 GB), also the home server. Docker available; no JDK or Postgres on the host yet. Prefer containers for databases; check `free -h` before memory-heavy builds.

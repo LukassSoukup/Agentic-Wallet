@@ -1,15 +1,15 @@
 ---
-id: ADR-0008
+id: ADR-0004
 status: proposed
 date: 2026-10-18
-tasks: ["EPIC-021"]
+tasks: []
 ---
-# ADR-0008: Payment methods, single-use authorisation and rails
+# ADR-0004: Payment methods, single-use authorisation and rails
 
-> **Re-opened 2026-10-23 by TASK-048:** the rails and the hand-off were shaped by the event. To be superseded by the ADR of TASK-007 (hand-off and validity from the public specs, simulators first, x402 deferred).
+> **Re-opened 2026-10-23:** the rails and the hand-off were shaped by the event. To be superseded by the ADR of T-005 (hand-off and validity from the public specs, simulators first, x402 deferred).
 
 ## Context
-Handoff M7 and M8; the user added payment methods with blocking and a crypto rail (2026-10-18, EPIC-021). The handoff forbids holding customer money and saying we initiate payments. Network facts in [payment-networks](../research/payment-networks.md).
+Handoff M7 and M8; the user added payment methods with blocking and a crypto rail (2026-10-18). The handoff forbids holding customer money and saying we initiate payments. Network facts in [payment-networks](../research/payment-networks.md).
 
 ## Options considered
 1. **We decide and authorise; the issuer or the user's wallet executes (chosen).**

@@ -1,15 +1,15 @@
 ---
-id: ADR-0006
+id: ADR-0002
 status: proposed
 date: 2026-10-18
-tasks: ["EPIC-021"]
+tasks: []
 ---
-# ADR-0006: Domain model and ports for the demo epic
+# ADR-0002: Domain model and ports for the demo epic
 
-> **Re-opened 2026-10-23 by TASK-048:** narrowed to the demo epic. To be superseded by the ADR of TASK-003 (owner and caller identity, Settlement and Refund, `RiskSignal`, `ScenarioSource` placement).
+> **Re-opened 2026-10-23:** narrowed to the demo epic. To be superseded by the ADR of T-003 (owner and caller identity, Settlement and Refund, `RiskSignal`, `ScenarioSource` placement).
 
 ## Context
-TASK-003 is narrowed to what EPIC-021 needs (user, 2026-10-18). Stack and modules per [ADR-0005-tech-stack](ADR-0005-tech-stack.md): `core` (pure), `app` (Spring adapters, REST + SSE), `web` (React + TypeScript). Invariant 9.
+Narrowed to what the hackathon demo epic needs (user, 2026-10-18). Stack and modules per [ADR-0001-tech-stack](ADR-0001-tech-stack.md): `core` (pure), `app` (Spring adapters, REST + SSE), `web` (React + TypeScript). Invariant 9.
 
 ## Options considered
 1. **One pure decision core with ports (chosen).** Every input (mandate, ledger, history, agents, methods, FX, clock, LLM) arrives through a port; the core returns a decision value; adapters persist and execute.

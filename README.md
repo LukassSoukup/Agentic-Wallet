@@ -14,5 +14,3 @@ Status: **planning**. No production code yet.
 All data in this repository is synthetic or simulated. It holds no real people, card numbers or credentials.
 
 The repo root can be opened as an Obsidian vault; docs use relative Markdown links, which Obsidian, GitHub and IDEs all follow.
-
-This repository restarts the earlier `wallet_control` repo (archived) with its product knowledge and without its workflow tooling.

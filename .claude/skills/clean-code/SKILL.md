@@ -33,7 +33,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 ## Rules
 
 ### Names
-- Use the words of the [glossary](../../../docs/domain/glossary.md) and the ADR names for types and ports (`Mandate`, `Decision`, step-up, `UntrustedText`, `SpendLedger` from [ADR-0006](../../../docs/adr/ADR-0006-domain-model-and-ports.md)). No synonyms (`Rule` vs `Policy` vs `Constraint` for one idea), no new terms without adding them to the glossary.
+- Use the words of the [glossary](../../../docs/domain/glossary.md) and the ADR names for types and ports (`Mandate`, `Decision`, step-up, `UntrustedText`, `SpendLedger` from [ADR-0002](../../../docs/adr/ADR-0002-domain-model-and-ports.md)). No synonyms (`Rule` vs `Policy` vs `Constraint` for one idea), no new terms without adding them to the glossary.
 - Classes are nouns, methods are verbs, booleans read as predicates (`isWithinLimit`, `hasPendingStepUp`).
 - Name for the reader, not the implementation: `remainingBudget`, not `tmpVal2`, `map`, `data`, `helper`, `manager`, `util`.
 - Units and currency belong in the type, not the name (`Money`, `Duration`), never `amountCzk: BigDecimal`.

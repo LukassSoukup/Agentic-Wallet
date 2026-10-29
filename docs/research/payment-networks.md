@@ -31,6 +31,6 @@ Related open standards: AP2 (Google, now at FIDO; intent/cart/payment mandates),
 - Contract tests run against both the simulator and the real sandbox, so the simulator can't drift from reality.
 - Reference code to study (not to vendor): AP2 samples, the Verifiable Intent reference implementation.
 
-Tracked in TASK-007.
+Tracked in T-005.
 
 Visa details, sandbox access and what we've learned from live calls: [visa-intelligent-commerce](visa-intelligent-commerce/visa-intelligent-commerce.md). Note (2026-10-23): the Cybersource route needs a token requester ID and relationship ID from an account manager, so "self-serve" above may not fully hold; see [vic-open-questions](visa-intelligent-commerce/vic-open-questions.md).

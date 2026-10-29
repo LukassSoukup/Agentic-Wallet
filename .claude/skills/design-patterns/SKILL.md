@@ -48,13 +48,13 @@ Before you add an interface, abstract class, factory, wrapper, event, or a secon
 | Absence without `null` checks | **Null Object** / `Optional` | `null` returns |
 
 ## Patterns as they fit this project
-Illustrative, based on the draft model in [ADR-0006](../../../docs/adr/ADR-0006-domain-model-and-ports.md); TASK-003 and later ADRs decide the real shapes.
+Illustrative, based on the draft model in [ADR-0002](../../../docs/adr/ADR-0002-domain-model-and-ports.md); T-003 and later ADRs decide the real shapes.
 
 - **Ports and adapters (hexagonal).** Ports are interfaces in `core` with contract comments; adapters live outside and are Adapters in the GoF sense. One shared contract test suite per port.
 - **Strategy for decision rules.** Each fixed rule is its own type behind one interface, returning a verdict with reasons. The combiner folds verdicts and can only raise caution (APPROVE < STEP_UP < DECLINE). A risk or model signal is just another input to that fold; no strategy can lower the outcome (invariant 2).
 - **Value objects** (DDD): `Money`, `IdempotencyKey`, `UntrustedText`, `Period`. Immutable `record`s, validated in the factory.
 - **Aggregates and repositories** (DDD): one aggregate per consistency boundary; repositories are ports, one per aggregate root.
-- **Decorator for cross-cutting adapter concerns:** metrics, retries, caching around a port. The idempotency lookup and the audit write are steps inside the decision flow (ADR-0006: idempotency lookup → … → audit record → only then an authorisation), not wrappers around it. Decorators must not swallow failures.
+- **Decorator for cross-cutting adapter concerns:** metrics, retries, caching around a port. The idempotency lookup and the audit write are steps inside the decision flow (ADR-0002: idempotency lookup → … → audit record → only then an authorisation), not wrappers around it. Decorators must not swallow failures.
 - **Command + append-only log for replay** (invariant 8): the decision's inputs are stored as data so the decision can be recomputed.
 - **State (or a sealed state type) for lifecycles:** proposals, step-ups, authorisations, mismatch cases. Illegal transitions are unrepresentable or throw a named exception.
 - **Factory methods at the trust boundary:** untrusted input becomes a validated value or is rejected (parse, don't validate).

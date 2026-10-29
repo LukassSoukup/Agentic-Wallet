@@ -6,14 +6,14 @@ Template:
 
 ```
 ## YYYY-MM-DD: <what we tried>
-- Task: TASK-NNN
+- Task: T-NNN
 - Call: METHOD /path
 - Result: HTTP status, status field, notable response fields
 - Learned: … (closes Qn / contradicts <page>)
 ```
 
 ## 2026-10-24: unauthenticated route probe
-- Task: TASK-058 (research agent)
+- Task: none (research agent)
 - Calls: POST without credentials or body to `apitest.cybersource.com` on `/icc/v1/instructions`, `/acp/v1/instructions`, `/icc/v1/tokens`, `/acp/v1/tokens`, `/icc/v1/agents`, `/{icc,acp}/v1/instructions/x/credentials`; controls `/icc/v1/nonexistent`, `/acp/v1/nonexistent`, `/foo/v1/tokens`, `/pts/v2/payments`, `/tms/v1/instrumentidentifiers`.
 - Result: every real path → 400 `{"response":{"rmsg":"Bad Request"}}`; unknown paths → 404.
 - Learned: the gateway routes both `/icc` and `/acp` (narrows Q1); unauthenticated calls are rejected (closes Q6). Says nothing about which schema each enforces.

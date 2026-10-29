@@ -1,6 +1,6 @@
 # Pattern catalogue
 
-The 22 patterns on [refactoring.guru](https://refactoring.guru/design-patterns/catalog), grouped as there. For each, our own notes on when to use it, when not, and how it fits this project. They are usually enough. The "Here" notes are illustrative until TASK-003 settles the model.
+The 22 patterns on [refactoring.guru](https://refactoring.guru/design-patterns/catalog), grouped as there. For each, our own notes on when to use it, when not, and how it fits this project. They are usually enough. The "Here" notes are illustrative until T-003 settles the model.
 
 Only if you're unsure what a pattern is or how it's built, look it up (pattern name in the case shown):
 - Explanation: `https://refactoring.guru/design-patterns/<kebab-case>`, e.g. `chain-of-responsibility`.
@@ -46,7 +46,7 @@ The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt the
 ### Bridge
 - **Use when:** Two dimensions vary independently (abstraction × implementation).
 - **Avoid when:** Only one dimension varies.
-- **Here:** Possibly payment method × rail; decide in TASK-003/007, not speculatively.
+- **Here:** Possibly payment method × rail; decide in T-003/T-005, not speculatively.
 
 ### Composite
 - **Use when:** Parts and wholes form a tree and clients should treat them alike.
@@ -56,7 +56,7 @@ The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt the
 ### Decorator
 - **Use when:** Add responsibilities to an object without changing it or its callers.
 - **Avoid when:** The added behaviour is core logic, or the order of wrappers matters invisibly.
-- **Here:** Metrics, retries, caching around ports. Not for the idempotency lookup or the audit write: those are steps in the decision flow (ADR-0006). Never swallow failures.
+- **Here:** Metrics, retries, caching around ports. Not for the idempotency lookup or the audit write: those are steps in the decision flow (ADR-0002). Never swallow failures.
 
 ### Facade
 - **Use when:** Callers need one simple entry to a subsystem.
