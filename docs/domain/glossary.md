@@ -1,6 +1,6 @@
 # Glossary (ubiquitous language)
 
-Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md). It gets refined in TASK-003.
+Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md). It gets refined in T-003.
 
 - **Agent**: a registered AI shopping agent with an identity, a status and a link to a payment network (Mastercard, Visa or both). It searches, builds orders and proposes purchases. It can't pay without a Decision.
 - **Payment network**: Mastercard and/or Visa agentic payment rails.

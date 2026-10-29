@@ -7,7 +7,7 @@ Part of [visa-intelligent-commerce](visa-intelligent-commerce.md). From the Cybe
 - Paths: the SDK uses `/icc/v1/...`; the guide uses `/acp/v1/...`. The sandbox routes both (unauthenticated probe, [vic-sandbox-log](vic-sandbox-log.md)). SDK history: 0.0.85–0.0.90 (2026-01 to 06) used `/acp/v1`, 0.0.91–0.0.94 had no agentic classes, 0.0.95 brought them back as `/icc/v1`, alongside agent registration and the ACP/UCP checkout APIs. The guide predates 0.0.95, so treat the SDK as current until a live call says otherwise.
 
 ## Endpoints (SDK paths)
-Core purchase flow, the part TASK-034 needs:
+Core purchase flow, the part T-028 needs:
 
 | Step | Method and path | SDK class / method |
 |---|---|---|

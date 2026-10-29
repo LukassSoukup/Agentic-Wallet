@@ -1,15 +1,15 @@
 ---
-id: ADR-0007
+id: ADR-0003
 status: proposed
 date: 2026-10-18
-tasks: ["EPIC-021"]
+tasks: []
 ---
-# ADR-0007: Model use: extract and flag, caution only, fail closed
+# ADR-0003: Model use: extract and flag, caution only, fail closed
 
-> **Re-opened 2026-10-23 by TASK-048:** amended in place: one provider instead of a second one for the event; the demo framing removed; the extractor set no longer bounded by the demo fixtures.
+> **Re-opened 2026-10-23:** amended in place: one provider instead of a second one for the event; the demo framing removed; the extractor set no longer bounded by the demo fixtures.
 
 ## Context
-The handoff makes the intent check (M18) the core and warns that a plain prompt might match it ("a GPT wrapper"). Invariants 2 and 3. Decided with the user in EPIC-021 on 2026-10-18. The glossary's earlier rule that the mandate compiler never takes part in a decision still holds.
+The handoff makes the intent check (M18) the core and warns that a plain prompt might match it ("a GPT wrapper"). Invariants 2 and 3. Decided with the user on 2026-10-18. The glossary's earlier rule that the mandate compiler never takes part in a decision still holds.
 
 ## Options considered
 1. **Hybrid (chosen):** regex and fixed checks first; the LLM fills only facts they can't settle, in a fixed schema; fixed rules compare.

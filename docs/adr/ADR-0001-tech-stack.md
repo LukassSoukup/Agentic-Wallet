@@ -1,12 +1,12 @@
 ---
-id: ADR-0005
+id: ADR-0001
 status: accepted
 date: 2026-10-17
-tasks: ["TASK-002"]
+tasks: []
 ---
-# ADR-0005: Tech stack: Java 25, Spring Boot 4, PostgreSQL with plain SQL, React + TypeScript UI
+# ADR-0001: Tech stack: Java 25, Spring Boot 4, PostgreSQL with plain SQL, React + TypeScript UI
 
-> **Re-opened 2026-10-23 by TASK-048:** decided for a 26-hour hackathon. To be superseded by the stack ADR of TASK-050 (persistence re-decided, Hibernate/JPA now allowed; one LLM provider; no x402 wallet side; quality tooling). Until then its decisions stand as written.
+> **Re-opened 2026-10-23:** decided for a 26-hour hackathon. To be superseded by the stack ADR of T-004 (persistence re-decided, Hibernate/JPA now allowed; one LLM provider; no x402 wallet side; quality tooling). Until then its decisions stand as written.
 
 ## Context
 The brief prefers Java (Spring Boot), Hibernate/JPA and PostgreSQL. It requires:
@@ -16,10 +16,10 @@ The brief prefers Java (Spring Boot), Hibernate/JPA and PostgreSQL. It requires:
 - exact decimal money;
 - idempotency.
 
-Constraints from TASK-001:
+Constraints at the time:
 - **Hackathon:** the product is built for the FinTechers Hackathon (Mon 19 Oct 12:00 to Tue 20 Oct 13:30). A foundation is built before the event; the judged features are built at it. The demo is a 4-minute live demo.
 - **Who writes code:** the user and agents only, agents test-first; no teammate writes code (U2, 2026-10-18). The frontend is TypeScript.
-- **UI:** the full design comes from Claude Design (React/HTML) and is built in its own epic (EPIC-021, 2026-10-18).
+- **UI:** the full design comes from Claude Design (React/HTML) and is built in its own epic (the hackathon demo epic, 2026-10-18).
 - **Rails:** an x402 crypto rail is in scope; its official SDKs are TypeScript, Python and Go, none for Java.
 - **Users:** a single user, no auth.
 - **Running it:** one command, locally, on the Pi 5 (aarch64, about 12 GiB free, Docker, no JDK) and on teammates' laptops.
@@ -73,7 +73,7 @@ Within option 1, three smaller choices were made:
 - − This deviates from the brief's Hibernate preference, so mappings are written by hand. That is a small job, since there are few aggregates.
 - − Boot 4 and Jackson 3 idioms trip agents up. The skeleton built before the event is the pattern to copy.
 - − If the event requires an agent hosted on AgentCore, that agent is a separate (probably Python) process that calls our API. The wallet stack doesn't change.
-- Setup and exact versions are pinned in TASK-006. Checks still to do there:
+- Setup and exact versions are pinned in T-008. Checks still to do there:
   - the OpenRouter property and base URL in Spring AI 2.0;
   - that ArchUnit and jqwik work with JUnit 6;
   - how fast a Spring context starts on the Pi.
