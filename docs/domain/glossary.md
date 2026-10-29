@@ -12,7 +12,7 @@ Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md) and [docs/architecture/](.
 - **Mandate draft**: a compiled but not yet confirmed mandate. It has no effect.
 - **Purchase proposal / attempt**: an order an agent asks the control layer to approve: merchant, lines (item ids or item specs) with quantities, a `purchaseKey`, and the agent's own (untrusted) description. Never personal data.
 - **Item spec**: a typed description of what to buy where the merchant sells offers rather than catalogue items (a flight: origin, destination, local date, passenger count, cabin), from a closed set of categories with validated values; `payments` resolves it against the merchant's offers and a pure rule picks among the matches.
-- **Profile**: the cardholder's buyer, traveller and delivery entries and notification channels, versioned, edited only in the app; a mandate names the entries it may use, and only version ids leave the `profiles` module.
+- **Profile**: the cardholder's buyer, traveller and delivery entries and notification channels, versioned, edited only in the app; a mandate names the entries it may use, a decision records the version it was made with, and only version ids leave the `profiles` module.
 - **Standing mandate**: a confirmed mandate with a run frequency and a purchase count, run without the user in chat (a price watch, "look every morning"); it is **fulfilled** when the count is reached.
 - **Due run / run claim**: one scheduled run of a standing mandate, kept by `agents`; the harness runtime claims it once and receives the run token for it.
 - **Watch**: the harness module that runs standing mandates; its price check is advisory, the backend decides on the merchant's cart.
@@ -47,9 +47,11 @@ Draft from [PROJECT_BRIEF.md](../../PROJECT_BRIEF.md) and [docs/architecture/](.
 - **Checkout attempt**: the persisted state of paying for one approved decision (`CREATED`, `CREDENTIAL_REQUESTED`, `COMPLETING`, `PENDING_USER`, `COMPLETED`, `FAILED`, `UNKNOWN`, `CANCELLED`); at most one credential request per decision; `UNKNOWN` is announced by its own event.
 - **DecisionInput**: everything a decision was based on, stored with it; replaying it through the pure core must return the same decision.
 - **Agent session token**: signed by the backend, short-lived, bound to cardholder, agent instance and audience; the only way an agent's identity reaches the control layer during a chat.
-- **Agent run token**: the same, minted for one claimed run of a standing mandate, bound also to the mandate and limited to proposing and reading; short-lived.
-- **Agent-instance credential**: the one long-lived secret in the harness; it can only claim due runs of its own agent instance.
-- **Foreign-currency margin**: a caution-only allowance from `settings` added to a converted amount before it is compared with a limit, because the bank bills at its own rate.
+- **Agent run token**: the same, minted for one claimed run of a standing mandate, bound also to the mandate and the run id and limited to proposing, reading and sending the trace; short-lived.
+- **Agent-instance credential**: the harness's only credential towards the control layer, long-lived; it can only claim due runs of its own agent instance.
+- **Foreign-currency margin**: `converted × rate`, with a rate ≥ 0 from `settings`, added to a converted amount before it is compared with a limit, because the bank bills at its own rate; it can only make the amount rule stricter.
+- **Strict / inclusive limit**: the mandate's comparison operator for its amount limit: strict passes when `converted + margin < limit`, inclusive when `converted + margin ≤ limit`; a failure is DECLINE in both.
+- **Purchase count**: how many purchases a mandate allows in its lifetime (one for a one-shot watch); kept in the ledger as reserved and counted purchases under a per-mandate lock row.
 - **Hook (authorisation hook)**: the bank processor's real-time call to an external URL for each card authorisation, waiting for approve or decline within its budget (800 ms to 2 s).
 - **Hook responder**: our service that answers the hook from pre-approvals, in shadow or enforcing mode.
 - **Shadow mode**: the hook responder records what it would answer without blocking anything.
