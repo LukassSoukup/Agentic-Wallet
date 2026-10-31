@@ -1,0 +1,146 @@
+%% Agentic Wallet: one purchase, end to end (BPMN). Drawn from docs/architecture/04-purchase-flow.md on DuctTape.io and
+%% exported as Mermaid on 2026-10-31. Re-import in the editor with "New diagram -> From Mermaid" (the bpmn comments
+%% restore the notation). Reference only; 04-purchase-flow.md and ADR-0007 win where they differ. The shapes carry
+%% short step names; the full text of each step is in the shape's description in the editor and in the .json import file.
+%% DuctTape.io Agentic Wallet: one purchase, end to end (v2)
+flowchart LR
+  %% ducttape:pool One_purchase_end_to_end_04_purchase_flow
+  %% bpmn:One_purchase_end_to_end_04_purchase_flow bpmn-pool
+  subgraph One_purchase_end_to_end_04_purchase_flow["One purchase, end to end (04-purchase-flow)"]
+    %% ducttape:l-user user_web
+    %% bpmn:user_web bpmn-lane
+    subgraph user_web["user / web"]
+      %% ducttape:st buy_in_chat
+      %% bpmn:buy_in_chat bpmn-start-event
+      buy_in_chat(("#quot;buy …#quot; in chat"))
+      %% ducttape:t9 n_9_Step_up_answered_in_the_app
+      %% bpmn:n_9_Step_up_answered_in_the_app bpmn-user-task
+      n_9_Step_up_answered_in_the_app("9 Step-up answered in the app")
+    end
+    %% ducttape:l-harness agent_harness
+    %% bpmn:agent_harness bpmn-lane
+    subgraph agent_harness["agent-harness"]
+      %% ducttape:t1 n_1_Shop_search_read_rank
+      %% bpmn:n_1_Shop_search_read_rank bpmn-agent-task
+      n_1_Shop_search_read_rank("1 Shop: search, read, rank")
+      %% ducttape:t2 n_2_propose_purchase
+      %% bpmn:n_2_propose_purchase bpmn-task
+      n_2_propose_purchase("2 propose_purchase")
+      %% ducttape:a-standing Standing_mandates_same_steps_no_user
+      %% bpmn:Standing_mandates_same_steps_no_user bpmn-annotation
+      Standing_mandates_same_steps_no_user["Standing mandates: same steps, no user"]
+    end
+    %% ducttape:l-ai-llm Lane
+    %% bpmn:Lane bpmn-lane aiLane
+    subgraph Lane["AI lane"]
+      %% ducttape:llm the_user_s_chosen_LLM
+      the_user_s_chosen_LLM("the user's chosen LLM")
+    end
+    %% ducttape:l-mcp control_mcp
+    %% bpmn:control_mcp bpmn-lane
+    subgraph control_mcp["control-mcp"]
+      %% ducttape:t2b validate_type_as_untrusted_forward
+      %% bpmn:validate_type_as_untrusted_forward bpmn-service-task
+      validate_type_as_untrusted_forward("validate, type as untrusted, forward")
+    end
+    %% ducttape:l-backend control_backend
+    %% bpmn:control_backend bpmn-lane
+    subgraph control_backend["control-backend"]
+      %% ducttape:t3 n_3_Idempotency_by_purchaseKey
+      %% bpmn:n_3_Idempotency_by_purchaseKey bpmn-service-task
+      n_3_Idempotency_by_purchaseKey("3 Idempotency by purchaseKey")
+      %% ducttape:t4 n_4_Reachability_and_route
+      %% bpmn:n_4_Reachability_and_route bpmn-service-task
+      n_4_Reachability_and_route("4 Reachability and route")
+      %% ducttape:t5 n_5_Gather_cart_evidence
+      %% bpmn:n_5_Gather_cart_evidence bpmn-service-task
+      n_5_Gather_cart_evidence("5 Gather cart evidence")
+      %% ducttape:t6 n_6_Extract_facts_typed_questions
+      %% bpmn:n_6_Extract_facts_typed_questions bpmn-ai-task
+      n_6_Extract_facts_typed_questions("6 Extract facts (typed questions)")
+      %% ducttape:t7 n_7_Decide_pure_core
+      %% bpmn:n_7_Decide_pure_core bpmn-business-rule-task
+      n_7_Decide_pure_core("7 Decide (pure core)")
+      %% ducttape:t8 n_8_Commit_one_transaction
+      %% bpmn:n_8_Commit_one_transaction bpmn-service-task
+      n_8_Commit_one_transaction("8 Commit: one transaction")
+      %% ducttape:d8 audit_log
+      %% bpmn:audit_log bpmn-data-store
+      audit_log[("audit log")]
+      %% ducttape:g1 outcome
+      %% bpmn:outcome bpmn-exclusive-gateway
+      outcome{"outcome"}
+      %% ducttape:t9b re_check_second_decision
+      %% bpmn:re_check_second_decision bpmn-service-task
+      re_check_second_decision("re-check: second decision")
+      %% ducttape:g2 re_check
+      %% bpmn:re_check bpmn-exclusive-gateway
+      re_check{"re-check"}
+      %% ducttape:e-decl DECLINE
+      %% bpmn:DECLINE bpmn-end-event
+      DECLINE(("DECLINE"))
+      %% ducttape:t10 n_10_Checkout_payments
+      %% bpmn:n_10_Checkout_payments bpmn-service-task
+      n_10_Checkout_payments("10 Checkout (payments)")
+      %% ducttape:a-connector Connector_order_no_credential_step
+      %% bpmn:Connector_order_no_credential_step bpmn-annotation
+      Connector_order_no_credential_step["Connector order: no credential step"]
+      %% ducttape:t13 n_12_Reconcile_three_ways
+      %% bpmn:n_12_Reconcile_three_ways bpmn-service-task
+      n_12_Reconcile_three_ways("12 Reconcile three ways")
+      %% ducttape:en completed_reconciled
+      %% bpmn:completed_reconciled bpmn-end-event
+      completed_reconciled(("completed, reconciled"))
+    end
+    %% ducttape:l-ai-intent Lane_2
+    %% bpmn:Lane_2 bpmn-lane aiLane
+    subgraph Lane_2["AI lane"]
+      %% ducttape:intent intent_model_extraction
+      intent_model_extraction("intent model (extraction)")
+    end
+    %% ducttape:l-merchant merchant_network
+    %% bpmn:merchant_network bpmn-lane
+    subgraph merchant_network["merchant / network"]
+      %% ducttape:m5 priced_cart_or_quote_tier_1
+      %% bpmn:priced_cart_or_quote_tier_1 bpmn-task
+      priced_cart_or_quote_tier_1("priced cart or quote (tier 1)")
+      %% ducttape:t11 n_11_PSP_authorises_via_network
+      %% bpmn:n_11_PSP_authorises_via_network bpmn-task
+      n_11_PSP_authorises_via_network("11 PSP authorises via network")
+    end
+    %% ducttape:l-hook bank_processor_hook_responder
+    %% bpmn:bank_processor_hook_responder bpmn-lane
+    subgraph bank_processor_hook_responder["bank processor / hook-responder"]
+      %% ducttape:t12 hook_match_pre_approval
+      %% bpmn:hook_match_pre_approval bpmn-service-task
+      hook_match_pre_approval("hook: match pre-approval")
+    end
+  end
+  buy_in_chat --> n_1_Shop_search_read_rank
+  n_1_Shop_search_read_rank --> n_2_propose_purchase
+  n_2_propose_purchase -->|"MCP"| validate_type_as_untrusted_forward
+  validate_type_as_untrusted_forward -->|"REST"| n_3_Idempotency_by_purchaseKey
+  n_3_Idempotency_by_purchaseKey --> n_4_Reachability_and_route
+  n_4_Reachability_and_route --> n_5_Gather_cart_evidence
+  n_5_Gather_cart_evidence -->|"session / quote"| priced_cart_or_quote_tier_1
+  priced_cart_or_quote_tier_1 --> n_6_Extract_facts_typed_questions
+  n_6_Extract_facts_typed_questions --> n_7_Decide_pure_core
+  n_7_Decide_pure_core --> n_8_Commit_one_transaction
+  n_8_Commit_one_transaction --> outcome
+  outcome -->|"DECLINE"| DECLINE
+  outcome -->|"STEP_UP"| n_9_Step_up_answered_in_the_app
+  outcome -->|"APPROVE"| n_10_Checkout_payments
+  n_9_Step_up_answered_in_the_app -->|"answer"| re_check_second_decision
+  re_check_second_decision --> re_check
+  re_check -->|"APPROVE"| n_10_Checkout_payments
+  re_check -->|"DECLINE or expired"| DECLINE
+  n_10_Checkout_payments -->|"checkout completed"| n_11_PSP_authorises_via_network
+  n_11_PSP_authorises_via_network -->|"authorisation"| hook_match_pre_approval
+  hook_match_pre_approval -->|"hook log, clearing"| n_12_Reconcile_three_ways
+  n_12_Reconcile_three_ways --> completed_reconciled
+  n_1_Shop_search_read_rank -.- the_user_s_chosen_LLM
+  n_6_Extract_facts_typed_questions -.- intent_model_extraction
+  n_8_Commit_one_transaction -.- audit_log
+  Standing_mandates_same_steps_no_user -.- n_1_Shop_search_read_rank
+  Connector_order_no_credential_step -.- n_10_Checkout_payments
+  classDef default fill:#ffffff,stroke:#8a8d93,color:#17181a

@@ -1,0 +1,59 @@
+%% Agentic Wallet: overview, one page, high level. Drawn on DuctTape.io from docs/architecture/02-system.md and
+%% exported as Mermaid on 2026-10-31. Re-import in the editor with "New diagram -> From Mermaid". Reference only;
+%% the pages and ADRs win where they differ. Details per component are in the .json import file's descriptions.
+%% DuctTape.io Agentic Wallet: overview
+flowchart LR
+  %% ducttape:user cardholder
+  cardholder(("cardholder"))
+  %% ducttape:web web_app
+  web_app("web app")
+  %% ducttape:harness agent_harness
+  agent_harness("agent-harness")
+  %% ducttape:llm LLM_via_gateway
+  LLM_via_gateway("LLM (via gateway)")
+  %% ducttape:open-web the_open_web
+  the_open_web("the open web")
+  %% ducttape:control-mcp control_mcp
+  control_mcp("control-mcp")
+  %% ducttape:gateway connector_gateway
+  connector_gateway("connector-gateway")
+  %% ducttape:backend control_backend
+  control_backend("control-backend")
+  %% ducttape:intent intent_model
+  intent_model("intent model")
+  %% ducttape:merchants merchants
+  merchants("merchants")
+  %% ducttape:networks payment_networks
+  payment_networks("payment networks")
+  %% ducttape:processor bank_processor
+  bank_processor("bank processor")
+  %% ducttape:hook hook_responder
+  hook_responder("hook-responder")
+  %% ducttape:pg PostgreSQL
+  PostgreSQL[("PostgreSQL")]
+  %% ducttape:harness-db harness_database
+  harness_database[("harness database")]
+  %% ducttape:n-zones Three_trust_zones_UNTRUSTED_agent_harnes
+  Three_trust_zones_UNTRUSTED_agent_harnes["Three trust zones. UNTRUSTED: agent-harness, LLM. BOUNDARY: control-mcp, connector-gateway (stateless, no database). TRUSTED: control-backend, hook-responder, PostgreSQL."]:::note
+  %% ducttape:n-rule No_payment_without_a_control_layer_decis
+  No_payment_without_a_control_layer_decis["No payment without a control-layer decision. The agent proposes; fixed rules decide; the user confirms mandates and answers step-ups in the app, never in chat; the backend pays."]:::note
+  cardholder -->|"uses"| web_app
+  web_app ==>|"chat"| agent_harness
+  web_app -->|"REST: confirm, step-up"| control_backend
+  agent_harness ==>|"prompts"| LLM_via_gateway
+  agent_harness -->|"GET only, via proxy"| the_open_web
+  agent_harness -->|"MCP tools"| control_mcp
+  agent_harness -->|"MCP discovery"| connector_gateway
+  control_mcp -->|"REST, mutual TLS"| control_backend
+  connector_gateway -->|"REST, mutual TLS"| control_backend
+  connector_gateway -->|"MCP, anonymous"| merchants
+  control_backend -->|"checkout, quote, order"| merchants
+  control_backend -->|"credential, confirmation"| payment_networks
+  control_backend -->|"typed questions"| intent_model
+  agent_harness -->|"conversations, memory"| harness_database
+  control_backend -->|"schemas, outbox"| PostgreSQL
+  payment_networks -->|"authorisation"| bank_processor
+  bank_processor -->|"hook call, ≤300 ms"| hook_responder
+  hook_responder -->|"pre-approvals"| PostgreSQL
+  classDef default fill:#ffffff,stroke:#8a8d93,color:#17181a
+  classDef note fill:#fdf6d8,stroke:#dcdcd7,color:#17181a

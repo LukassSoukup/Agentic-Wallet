@@ -1,0 +1,535 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    {
+      "id": "user",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "kind": "end-user",
+        "label": "cardholder",
+        "vendor": null,
+        "model": null,
+        "description": "Chats with the agent, confirms mandates, answers step-ups, links merchant accounts and turns connectors on and off, all in the web app. The bank's operator uses the same app's console.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "web",
+      "type": "aiNode",
+      "position": {
+        "x": 278,
+        "y": 244
+      },
+      "data": {
+        "kind": "web-app",
+        "label": "web app",
+        "vendor": "react",
+        "model": null,
+        "description": "USER'S DEVICE. React SPA: cardholder app and the minimal bank console. Chat goes to the agent harness; everything that changes rules, personal data or connectors, and every answer to a question, goes to the control backend as the authenticated user. No decision logic here.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "harness",
+      "type": "aiNode",
+      "position": {
+        "x": 722,
+        "y": 244
+      },
+      "data": {
+        "kind": "agent",
+        "label": "agent-harness",
+        "vendor": null,
+        "model": null,
+        "description": "UNTRUSTED. The shopping agent: chat, the user's chosen LLM, search and read-page tools, memory, mandate drafting, the watch runner for standing mandates. It can reach exactly two MCP servers, both ours, and the open web read-only through an egress proxy. It never holds a card, a credential, a merchant token or personal checkout data.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "llm",
+      "type": "aiNode",
+      "position": {
+        "x": 1119,
+        "y": 37
+      },
+      "data": {
+        "kind": "llm",
+        "label": "LLM (via gateway)",
+        "vendor": null,
+        "model": null,
+        "description": "The model the user picked from the bank's allowed list, reached through our or the bank's LLM gateway with a spend cap. Its text is untrusted data: it can make a decision more cautious, never less.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "open-web",
+      "type": "aiNode",
+      "position": {
+        "x": 1119,
+        "y": 145
+      },
+      "data": {
+        "kind": "box",
+        "label": "the open web",
+        "vendor": null,
+        "model": null,
+        "description": "Merchant pages the agent searches and reads. GET only, no cookies or credentials, through an egress proxy that refuses private address ranges. Everything read is untrusted text.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "end"
+      }
+    },
+    {
+      "id": "harness-db",
+      "type": "aiNode",
+      "position": {
+        "x": 1119,
+        "y": 235
+      },
+      "data": {
+        "kind": "relational-db",
+        "label": "harness database",
+        "vendor": "postgresql",
+        "model": null,
+        "description": "UNTRUSTED. The agent harness's own database: conversations and memory (purchases, merchants, habits as structured facts; ranking input only, never a rule input). No control data is reachable from here; it may live on a separate instance.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "control-mcp",
+      "type": "aiNode",
+      "position": {
+        "x": 1119,
+        "y": 343
+      },
+      "data": {
+        "kind": "mcp-server",
+        "label": "control-mcp",
+        "vendor": null,
+        "model": null,
+        "description": "BOUNDARY, stateless. The only door from the agent into the control layer: typed MCP tools (propose a purchase, read mandates, decisions and activity, draft a mandate), the trace ingest and the run claim. It validates, types every free text as untrusted, forwards the agent's session token verbatim to the backend over REST with mutual TLS. No database, no business logic; no tool can approve or confirm anything.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "pass"
+      }
+    },
+    {
+      "id": "gateway",
+      "type": "aiNode",
+      "position": {
+        "x": 1119,
+        "y": 433
+      },
+      "data": {
+        "kind": "mcp-server",
+        "label": "connector-gateway",
+        "vendor": null,
+        "model": null,
+        "description": "BOUNDARY, stateless. The agent's second and last MCP server: it exposes only the discovery tools (search, read the catalogue) of merchant connectors the operator admitted and the user turned on, calls the merchant anonymously, checks each call with the backend, and holds no user token.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "pass"
+      }
+    },
+    {
+      "id": "backend",
+      "type": "aiNode",
+      "position": {
+        "x": 1521,
+        "y": 235
+      },
+      "data": {
+        "kind": "api-server",
+        "label": "control-backend",
+        "vendor": null,
+        "model": null,
+        "description": "TRUSTED. Hexagonal modular monolith with the pure decision core: mandates, decisions (APPROVE, DECLINE or STEP_UP, by fixed rules), ledger and limits, payments and checkout, authorisation pre-approvals, reconciliation, audit log, read models, notifications. It alone talks to the payment networks and the merchants' checkout and ordering endpoints, at addresses it knows, never ones the agent supplied. Decision, reservation, pre-approval, audit record and outbox rows commit in one transaction.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "intent",
+      "type": "aiNode",
+      "position": {
+        "x": 1979,
+        "y": 145
+      },
+      "data": {
+        "kind": "llm",
+        "label": "intent model",
+        "vendor": null,
+        "model": null,
+        "description": "Answers fixed, typed questions about merchant product text for the backend, outside the pure core. It can raise a decision's caution, never lower it; no answer on failure.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "merchants",
+      "type": "aiNode",
+      "position": {
+        "x": 1979,
+        "y": 343
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "merchants",
+        "vendor": null,
+        "model": null,
+        "description": "Agent checkout sessions (UCP or ACP through Visa's gateway), product catalogues, and, for merchants with their own API or MCP server, admitted connectors with discovery, account, quote and order tools. The user links their own merchant account by OAuth from the web app; the backend uses that link for quotes and orders.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "networks",
+      "type": "aiNode",
+      "position": {
+        "x": 1979,
+        "y": 235
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "payment networks",
+        "vendor": null,
+        "model": null,
+        "description": "Visa Intelligent Commerce (Cybersource) and Mastercard Agent Pay (simulated until access): merchant registries, a payment credential for exactly the approved amount and merchant, and the network confirmation carrying the decision id. The merchant's payment provider authorises through the network to the issuing bank.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "processor",
+      "type": "aiNode",
+      "position": {
+        "x": 2320,
+        "y": 235
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "bank processor",
+        "vendor": null,
+        "model": null,
+        "description": "The issuing bank's card processor (Thredd, Enfuce or the bank's own host). It calls the hook responder in real time for every authorisation on an enrolled agent token or agent card.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "pass"
+      }
+    },
+    {
+      "id": "hook",
+      "type": "aiNode",
+      "position": {
+        "x": 2736,
+        "y": 235
+      },
+      "data": {
+        "kind": "api-server",
+        "label": "hook-responder",
+        "vendor": null,
+        "model": null,
+        "description": "TRUSTED. Answers the processor's authorisation call within 300 ms p99: matches it to the pre-approval the backend wrote (token, amount at or below, merchant, window, unused), consumes it, logs the call. Shadow or enforcing mode. It never calls the backend, the agent or a model on the request path.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "pg",
+      "type": "aiNode",
+      "position": {
+        "x": 3077,
+        "y": 244
+      },
+      "data": {
+        "kind": "relational-db",
+        "label": "PostgreSQL",
+        "vendor": "postgresql",
+        "model": null,
+        "description": "TRUSTED. One instance for the control backend and the hook responder: a schema per backend module plus the outbox, a hook schema, a role per deployable; audit tables are insert-only. The agent harness has its own separate database (drawn next to it).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-zones",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 90
+      },
+      "width": 200,
+      "height": 232,
+      "data": {
+        "kind": "note",
+        "label": "Three trust zones. UNTRUSTED: agent-harness, LLM. BOUNDARY: control-mcp, connector-gateway (stateless, no database). TRUSTED: control-backend, hook-responder, PostgreSQL.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-rule",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 354
+      },
+      "width": 200,
+      "height": 192,
+      "data": {
+        "kind": "note",
+        "label": "No payment without a control-layer decision. The agent proposes; fixed rules decide; the user confirms mandates and answers step-ups in the app, never in chat; the backend pays.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "user",
+      "target": "web",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "uses",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e2",
+      "source": "web",
+      "target": "harness",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "chat",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "stream"
+    },
+    {
+      "id": "e3",
+      "source": "web",
+      "target": "backend",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "REST: confirm, step-up",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e4",
+      "source": "harness",
+      "target": "llm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "prompts",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "stream"
+    },
+    {
+      "id": "e5",
+      "source": "harness",
+      "target": "open-web",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "GET only, via proxy",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e6",
+      "source": "harness",
+      "target": "control-mcp",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MCP tools",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e7",
+      "source": "harness",
+      "target": "gateway",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MCP discovery",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e8",
+      "source": "control-mcp",
+      "target": "backend",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "REST, mutual TLS",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e9",
+      "source": "gateway",
+      "target": "backend",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "REST, mutual TLS",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e10",
+      "source": "gateway",
+      "target": "merchants",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MCP, anonymous",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e11",
+      "source": "backend",
+      "target": "merchants",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "checkout, quote, order",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e12",
+      "source": "backend",
+      "target": "networks",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "credential, confirmation",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e13",
+      "source": "backend",
+      "target": "intent",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "typed questions",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e14",
+      "source": "backend",
+      "target": "pg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "schemas, outbox",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e15",
+      "source": "networks",
+      "target": "processor",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "authorisation",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e16",
+      "source": "processor",
+      "target": "hook",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "hook call, ≤300 ms",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e17",
+      "source": "hook",
+      "target": "pg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "pre-approvals",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e18",
+      "source": "harness",
+      "target": "harness-db",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "conversations, memory",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}

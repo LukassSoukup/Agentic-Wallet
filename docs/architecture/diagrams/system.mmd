@@ -1,0 +1,99 @@
+%% Agentic Wallet: system, trust zones and communication. Drawn from docs/architecture/02-system.md and 03-modules.md
+%% on DuctTape.io and exported as Mermaid on 2026-10-31. Re-import in the editor with "New diagram -> From Mermaid".
+%% Reference only; 02-system.md and ADR-0006/0008 win where they differ. Arrow labels are deliberately short; the
+%% protocols, tokens and "never" rules are in each component's description in the editor and in the .json import file.
+%% DuctTape.io Agentic Wallet: system, trust zones and communication (v2)
+flowchart LR
+  %% ducttape:user cardholder
+  cardholder(("cardholder"))
+  %% ducttape:bank bank_console
+  bank_console(("bank (console)"))
+  %% ducttape:web web_React_SPA
+  web_React_SPA("web (React SPA)")
+  %% ducttape:harness agent_harness
+  agent_harness("agent-harness")
+  %% ducttape:llm-gateway LLM_gateway
+  LLM_gateway("LLM gateway")
+  %% ducttape:llm the_user_s_chosen_LLM
+  the_user_s_chosen_LLM("the user's chosen LLM")
+  %% ducttape:egress egress_proxy_GET_only
+  egress_proxy_GET_only("egress proxy (GET only)")
+  %% ducttape:open-web the_open_web_untrusted_text
+  the_open_web_untrusted_text("the open web (untrusted text)")
+  %% ducttape:harness-db harness_database
+  harness_database[("harness database")]
+  %% ducttape:control-mcp control_mcp
+  control_mcp("control-mcp")
+  %% ducttape:gateway connector_gateway
+  connector_gateway("connector-gateway")
+  %% ducttape:backend control_backend_modular_monolith
+  control_backend_modular_monolith("control-backend (modular monolith)")
+  %% ducttape:core control_core_pure_decision_core
+  control_core_pure_decision_core("control-core (pure decision core)")
+  %% ducttape:hook hook_responder
+  hook_responder("hook-responder")
+  %% ducttape:pg PostgreSQL
+  PostgreSQL[("PostgreSQL")]
+  %% ducttape:outbox transactional_outbox
+  transactional_outbox("transactional outbox")
+  %% ducttape:vic Visa_Intelligent_Commerce_Cybersource
+  Visa_Intelligent_Commerce_Cybersource("Visa Intelligent Commerce (Cybersource)")
+  %% ducttape:mc Mastercard_Agent_Pay_simulated_until_acc
+  Mastercard_Agent_Pay_simulated_until_acc("Mastercard Agent Pay (simulated until access)")
+  %% ducttape:merchants merchants_checkout_sessions_and_catalogu
+  merchants_checkout_sessions_and_catalogu("merchants' checkout sessions and catalogues")
+  %% ducttape:connectors admitted_merchant_connectors
+  admitted_merchant_connectors("admitted merchant connectors")
+  %% ducttape:merchant-auth merchant_s_authorization_server
+  merchant_s_authorization_server("merchant's authorization server")
+  %% ducttape:intent intent_model_extraction
+  intent_model_extraction("intent model (extraction)")
+  %% ducttape:processor bank_processor_Thredd_Enfuce_own_host
+  bank_processor_Thredd_Enfuce_own_host("bank processor (Thredd, Enfuce, own host)")
+  %% ducttape:fx FX_source
+  FX_source("FX source")
+  %% ducttape:n-zones UNTRUSTED_agent_harness_LLM_gateway_egre
+  UNTRUSTED_agent_harness_LLM_gateway_egre["UNTRUSTED: agent-harness, LLM gateway, egress proxy, harness database. BOUNDARY: control-mcp, connector-gateway (stateless). TRUSTED: control-backend, hook-responder, PostgreSQL. web: user's device."]:::note
+  %% ducttape:n-never-1 Never_crosses_a_boundary_network_credent
+  Never_crosses_a_boundary_network_credent["Never crosses a boundary: network credentials and card tokens (in memory in control-backend for one checkout call, never stored or logged); merchant account-link tokens (never in an event or log)."]:::note
+  %% ducttape:n-never-2 Never_leaves_the_trusted_zone_personal_c
+  Never_leaves_the_trusted_zone_personal_c["Never leaves the trusted zone: personal checkout data (profiles; payments reads it by version id at checkout, never in an event or a proposal). The backend never calls the harness."]:::note
+  %% ducttape:n-fence The_harness_connects_exactly_two_MCP_ser
+  The_harness_connects_exactly_two_MCP_ser["The harness connects exactly two MCP servers, control-mcp and connector-gateway, at addresses that are deployment configuration; nothing in a conversation, tool result or user setting can add one."]:::note
+  %% ducttape:n-test TEST_ONLY_never_in_a_production_image_VI
+  TEST_ONLY_never_in_a_production_image_VI["TEST ONLY (never in a production image): VIC and Agent Pay simulators, processor hook simulator, clearing file generator, demo shop, demo connector, scripted agent driver, benchmark runner."]:::note
+  cardholder -->|"cardholder app"| web_React_SPA
+  bank_console -->|"console"| web_React_SPA
+  web_React_SPA ==>|"chat"| agent_harness
+  web_React_SPA -->|"REST, as the user"| control_backend_modular_monolith
+  control_backend_modular_monolith ==>|"server-sent events"| web_React_SPA
+  control_backend_modular_monolith -->|"e-mail or web push"| cardholder
+  web_React_SPA -->|"OAuth account link"| merchant_s_authorization_server
+  merchant_s_authorization_server -->|"callback"| control_backend_modular_monolith
+  agent_harness ==>|"model calls"| LLM_gateway
+  LLM_gateway -->|"chosen model"| the_user_s_chosen_LLM
+  agent_harness -->|"GET only"| egress_proxy_GET_only
+  egress_proxy_GET_only -->|"no private ranges"| the_open_web_untrusted_text
+  agent_harness -->|"conversations, memory"| harness_database
+  agent_harness -->|"MCP, ingest, run claim"| control_mcp
+  agent_harness -->|"MCP, discovery tools"| connector_gateway
+  control_mcp -->|"REST, mutual TLS"| control_backend_modular_monolith
+  connector_gateway -->|"REST, client certificate"| control_backend_modular_monolith
+  connector_gateway -->|"MCP, anonymous"| admitted_merchant_connectors
+  control_backend_modular_monolith -->|"account, quote, order"| admitted_merchant_connectors
+  control_backend_modular_monolith -->|"sessions, offers, records"| merchants_checkout_sessions_and_catalogu
+  control_backend_modular_monolith -->|"registry, credentials"| Visa_Intelligent_Commerce_Cybersource
+  control_backend_modular_monolith -->|"registry, token"| Mastercard_Agent_Pay_simulated_until_acc
+  control_backend_modular_monolith -->|"typed questions"| intent_model_extraction
+  control_backend_modular_monolith -->|"rates"| FX_source
+  control_backend_modular_monolith -->|"schema per module"| PostgreSQL
+  control_backend_modular_monolith -->|"outbox rows"| transactional_outbox
+  transactional_outbox ==>|"events"| control_backend_modular_monolith
+  control_backend_modular_monolith -->|"decide(input)"| control_core_pure_decision_core
+  hook_responder -->|"match rule"| control_core_pure_decision_core
+  hook_responder -->|"views, hook schema"| PostgreSQL
+  bank_processor_Thredd_Enfuce_own_host -->|"authorisation, ≤300 ms"| hook_responder
+  merchants_checkout_sessions_and_catalogu -->|"PSP authorises"| bank_processor_Thredd_Enfuce_own_host
+  admitted_merchant_connectors -->|"card-on-file charge"| bank_processor_Thredd_Enfuce_own_host
+  classDef default fill:#ffffff,stroke:#8a8d93,color:#17181a
+  classDef note fill:#fdf6d8,stroke:#dcdcd7,color:#17181a

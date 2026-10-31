@@ -1,0 +1,1050 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    {
+      "id": "pool",
+      "type": "pool",
+      "position": {
+        "x": 16,
+        "y": 16
+      },
+      "width": 4856,
+      "height": 1112,
+      "data": {
+        "kind": "bpmn-pool",
+        "label": "One purchase, end to end (04-purchase-flow)",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "l-user",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 0
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 124,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "user / web",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "l-harness",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 124
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 128,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "agent-harness",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "l-ai-llm",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 252
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 124,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "bpmn": {
+          "aiLane": true
+        }
+      }
+    },
+    {
+      "id": "l-mcp",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 376
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 120,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "control-mcp",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "l-backend",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 496
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 252,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "control-backend",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "l-ai-intent",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 748
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 124,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "bpmn": {
+          "aiLane": true
+        }
+      }
+    },
+    {
+      "id": "l-merchant",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 872
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 120,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "merchant / network",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "l-hook",
+      "type": "lane",
+      "position": {
+        "x": 28,
+        "y": 992
+      },
+      "parentId": "pool",
+      "width": 4828,
+      "height": 120,
+      "data": {
+        "kind": "bpmn-lane",
+        "label": "bank processor / hook-responder",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "st",
+      "type": "bpmnNode",
+      "position": {
+        "x": 48,
+        "y": 24
+      },
+      "parentId": "l-user",
+      "data": {
+        "kind": "bpmn-start-event",
+        "label": "\"buy …\" in chat",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t1",
+      "type": "bpmnNode",
+      "position": {
+        "x": 252,
+        "y": 24
+      },
+      "parentId": "l-harness",
+      "width": 176,
+      "height": 80,
+      "data": {
+        "kind": "bpmn-agent-task",
+        "label": "1 Shop: search, read, rank",
+        "vendor": null,
+        "model": null,
+        "description": "1 Shop: search and read merchant pages and connector catalogues as untrusted text, rank with memory, pick merchant, items and quantities (never a delivery slot)",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "llm",
+      "type": "aiNode",
+      "position": {
+        "x": 492,
+        "y": 24
+      },
+      "parentId": "l-ai-llm",
+      "data": {
+        "kind": "llm",
+        "label": "the user's chosen LLM",
+        "vendor": null,
+        "model": null,
+        "description": "Chosen with the model picker from the allowed models in settings; a hard spend cap per user; no card or token data ever in a prompt.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t2",
+      "type": "bpmnNode",
+      "position": {
+        "x": 492,
+        "y": 28
+      },
+      "parentId": "l-harness",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-task",
+        "label": "2 propose_purchase",
+        "vendor": null,
+        "model": null,
+        "description": "2 propose_purchase: purchaseKey (generated once, reused on every retry), merchant reference, lines (merchant item id or typed item spec, with a quantity), description and reasons",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t2b",
+      "type": "bpmnNode",
+      "position": {
+        "x": 763,
+        "y": 24
+      },
+      "parentId": "l-mcp",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "validate, type as untrusted, forward",
+        "vendor": null,
+        "model": null,
+        "description": "validate the shape, wrap every free-text field as UntrustedText, attach the caller's identity from the session or run token, forward to the backend",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t3",
+      "type": "bpmnNode",
+      "position": {
+        "x": 1001,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "3 Idempotency by purchaseKey",
+        "vendor": null,
+        "model": null,
+        "description": "3 Idempotency: (agent instance, purchaseKey) seen? equal binding fields → the stored decision; different binding fields → conflict",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t4",
+      "type": "bpmnNode",
+      "position": {
+        "x": 1225,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "4 Reachability and route",
+        "vendor": null,
+        "model": null,
+        "description": "4 Reachability and route: the merchant directory; card and network by fixed rules, or the linked account the mandate names and the payment method on file",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t5",
+      "type": "bpmnNode",
+      "position": {
+        "x": 1449,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "5 Gather cart evidence",
+        "vendor": null,
+        "model": null,
+        "description": "5 Gather cart evidence (payments): open the checkout session, or list slots and ask the admitted connector for a quote; fetch product records",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "m5",
+      "type": "bpmnNode",
+      "position": {
+        "x": 1764,
+        "y": 24
+      },
+      "parentId": "l-merchant",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-task",
+        "label": "priced cart or quote (tier 1)",
+        "vendor": null,
+        "model": null,
+        "description": "priced cart from the checkout session (UCP/ACP), or priced quote (+ ceiling components) from the connector: tier 1; product records: tier 2",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t6",
+      "type": "bpmnNode",
+      "position": {
+        "x": 1988,
+        "y": 27
+      },
+      "parentId": "l-backend",
+      "width": 176,
+      "height": 80,
+      "data": {
+        "kind": "bpmn-ai-task",
+        "label": "6 Extract facts (typed questions)",
+        "vendor": null,
+        "model": null,
+        "description": "6 Extract facts (outside the core): one typed question per requirement the structured cart data cannot settle; a failed or slow call means no answer",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "intent",
+      "type": "aiNode",
+      "position": {
+        "x": 2228,
+        "y": 24
+      },
+      "parentId": "l-ai-intent",
+      "data": {
+        "kind": "llm",
+        "label": "intent model (extraction)",
+        "vendor": null,
+        "model": null,
+        "description": "Behind the IntentModel port. Can find a problem but never clear one; no answer can lower the outcome; replay never calls it; never called on the hook path.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t7",
+      "type": "bpmnNode",
+      "position": {
+        "x": 2228,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-business-rule-task",
+        "label": "7 Decide (pure core)",
+        "vendor": null,
+        "model": null,
+        "description": "7 Decide (pure core): decide(DecisionInput) → Decision. Hard rules, then caution rules that can only raise, intent check, ledger checks, routing, caution combiner (APPROVE < STEP_UP < DECLINE)",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t8",
+      "type": "bpmnNode",
+      "position": {
+        "x": 2492,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "8 Commit: one transaction",
+        "vendor": null,
+        "model": null,
+        "description": "8 Commit in ONE TRANSACTION under budget-period row locks: the decision, the ledger reservation and pre-approval (APPROVE only), the audit record with the full DecisionInput, the outbox rows",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "d8",
+      "type": "bpmnNode",
+      "position": {
+        "x": 2716,
+        "y": 27
+      },
+      "parentId": "l-backend",
+      "data": {
+        "kind": "bpmn-data-store",
+        "label": "audit log",
+        "vendor": null,
+        "model": null,
+        "description": "audit log (append-only): the DecisionInput is the replay unit",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "g1",
+      "type": "bpmnNode",
+      "position": {
+        "x": 2716,
+        "y": 142
+      },
+      "parentId": "l-backend",
+      "data": {
+        "kind": "bpmn-exclusive-gateway",
+        "label": "outcome",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t9",
+      "type": "bpmnNode",
+      "position": {
+        "x": 2865,
+        "y": 26
+      },
+      "parentId": "l-user",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-user-task",
+        "label": "9 Step-up answered in the app",
+        "vendor": null,
+        "model": null,
+        "description": "9 Step-up: one question with the merchant's cart and the reasons, expiring at min(configured ceiling, stored session expiry − margin); the answer goes from the app to the backend, never via MCP",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t9b",
+      "type": "bpmnNode",
+      "position": {
+        "x": 3117,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "re-check: second decision",
+        "vendor": null,
+        "model": null,
+        "description": "re-check: a second decision in one transaction (same mandate version, the ledger still allows it, the stored expiry has not passed; no merchant call inside)",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "g2",
+      "type": "bpmnNode",
+      "position": {
+        "x": 3341,
+        "y": 24
+      },
+      "parentId": "l-backend",
+      "data": {
+        "kind": "bpmn-exclusive-gateway",
+        "label": "re-check",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "e-decl",
+      "type": "bpmnNode",
+      "position": {
+        "x": 3567,
+        "y": 29
+      },
+      "parentId": "l-backend",
+      "data": {
+        "kind": "bpmn-end-event",
+        "label": "DECLINE",
+        "vendor": null,
+        "model": null,
+        "description": "DECLINE: outcome and reasons (the harness polls get_decision)",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t10",
+      "type": "bpmnNode",
+      "position": {
+        "x": 3567,
+        "y": 149
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "10 Checkout (payments)",
+        "vendor": null,
+        "model": null,
+        "description": "10 Checkout (payments, outbox listener): one credential for exactly this amount and merchant, complete the session idempotently, confirm to the network; the credential is discarded",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "a-connector",
+      "type": "bpmnNode",
+      "position": {
+        "x": 48,
+        "y": 39
+      },
+      "parentId": "l-backend",
+      "data": {
+        "kind": "bpmn-annotation",
+        "label": "Connector order: no credential step",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t11",
+      "type": "bpmnNode",
+      "position": {
+        "x": 3903,
+        "y": 24
+      },
+      "parentId": "l-merchant",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-task",
+        "label": "11 PSP authorises via network",
+        "vendor": null,
+        "model": null,
+        "description": "11 The merchant's PSP authorises through the network to the issuing bank",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t12",
+      "type": "bpmnNode",
+      "position": {
+        "x": 4204,
+        "y": 24
+      },
+      "parentId": "l-hook",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "hook: match pre-approval",
+        "vendor": null,
+        "model": null,
+        "description": "Match the authorisation to the pre-approval (token, transaction amount at or below, same merchant, inside the window, unused), consume it under a unique constraint, answer within budget, log the processor's id. In the PoC the processor hook simulator does this in shadow mode.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "t13",
+      "type": "bpmnNode",
+      "position": {
+        "x": 4540,
+        "y": 31
+      },
+      "parentId": "l-backend",
+      "width": 160,
+      "height": 72,
+      "data": {
+        "kind": "bpmn-service-task",
+        "label": "12 Reconcile three ways",
+        "vendor": null,
+        "model": null,
+        "description": "12 Reconcile: decision ↔ authorisation ↔ clearing; a mismatch opens a case with drafted evidence; money that settled without an approval is flagged",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "en",
+      "type": "bpmnNode",
+      "position": {
+        "x": 4764,
+        "y": 29
+      },
+      "parentId": "l-backend",
+      "data": {
+        "kind": "bpmn-end-event",
+        "label": "completed, reconciled",
+        "vendor": null,
+        "model": null,
+        "description": "completed and reconciled",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "a-standing",
+      "type": "bpmnNode",
+      "position": {
+        "x": 48,
+        "y": 36
+      },
+      "parentId": "l-harness",
+      "data": {
+        "kind": "bpmn-annotation",
+        "label": "Standing mandates: same steps, no user",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "st",
+      "target": "t1",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e2",
+      "source": "t1",
+      "target": "t2",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e3",
+      "source": "t2",
+      "target": "t2b",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MCP",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e4",
+      "source": "t2b",
+      "target": "t3",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "REST",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e5",
+      "source": "t3",
+      "target": "t4",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e6",
+      "source": "t4",
+      "target": "t5",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e7",
+      "source": "t5",
+      "target": "m5",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "session / quote",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e8",
+      "source": "m5",
+      "target": "t6",
+      "sourceHandle": "r",
+      "targetHandle": "b",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e9",
+      "source": "t6",
+      "target": "t7",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e10",
+      "source": "t7",
+      "target": "t8",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e11",
+      "source": "t8",
+      "target": "g1",
+      "sourceHandle": "r",
+      "targetHandle": "t",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e12",
+      "source": "g1",
+      "target": "e-decl",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DECLINE",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e13",
+      "source": "g1",
+      "target": "t9",
+      "sourceHandle": "t",
+      "targetHandle": "b",
+      "label": "STEP_UP",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e14",
+      "source": "g1",
+      "target": "t10",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "APPROVE",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e15",
+      "source": "t9",
+      "target": "t9b",
+      "sourceHandle": "r",
+      "targetHandle": "t",
+      "label": "answer",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e16",
+      "source": "t9b",
+      "target": "g2",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e17",
+      "source": "g2",
+      "target": "t10",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "APPROVE",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e18",
+      "source": "g2",
+      "target": "e-decl",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DECLINE or expired",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e19",
+      "source": "t10",
+      "target": "t11",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "checkout completed",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e20",
+      "source": "t11",
+      "target": "t12",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "authorisation",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e21",
+      "source": "t12",
+      "target": "t13",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "hook log, clearing",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e22",
+      "source": "t13",
+      "target": "en",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "sequence"
+    },
+    {
+      "id": "e23",
+      "source": "t1",
+      "target": "llm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "association"
+    },
+    {
+      "id": "e24",
+      "source": "t6",
+      "target": "intent",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "association"
+    },
+    {
+      "id": "e25",
+      "source": "t8",
+      "target": "d8",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "association",
+      "directed": true
+    },
+    {
+      "id": "e26",
+      "source": "a-standing",
+      "target": "t1",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "association"
+    },
+    {
+      "id": "e27",
+      "source": "a-connector",
+      "target": "t10",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "notation": "association"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}
