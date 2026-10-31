@@ -14,7 +14,7 @@ Two proposals, or a proposal and a step-up approval, can arrive at the same mome
 - **The purchase count** of a mandate (one for a one-shot watch) is kept the same way, in `ledger` only: one **purchase-count row** per mandate with reserved and counted purchases, locked with `SELECT … FOR UPDATE` after the budget-period rows, by mandate id, so two runs racing for the last purchase get exactly one APPROVE. It is reserved at APPROVE, counted at `COMPLETED`, released on `FAILED` or `CANCELLED`, held while `UNKNOWN`. Each counted purchase records the mandate version it was approved under, so the first-run rule for a merchant-derived list can ask "any completed purchase under this version?". A per-purchase ceiling alone would let two offers at two merchants both pass; the count is what makes "buy one ticket" mean one. `mandates` reads it through `ledger`'s API to raise `MandateFulfilled`.
 
 ## 2. Every step-up outcome is a second decision
-A STEP_UP ends in exactly one of: the user approves, the user declines, the question expires (the scheduled job in `decisioning`; the expiry is set per decision as `min(the configured ceiling, the stored session expiry − a margin)` and stored in the `DecisionInput`), the mandate is revoked or fulfilled, the agent is stopped. **Each of these is a new decision record** in `decisioning`, linked to the first, with its own `DecisionInput`, its reason code, its audit row and its `DecisionMade` outbox row, committed in one transaction. A user's decline, an expiry, a revocation, a fulfilment or a stop produce DECLINE with the corresponding reason and lock nothing. An approval runs the re-check:
+A STEP_UP ends in exactly one of: the user approves, the user declines, the question expires (the scheduled job in `decisioning`; the expiry is set per decision as `min(the ceiling in settings, the stored session expiry − a margin)` and stored in the `DecisionInput`), the mandate is revoked or fulfilled, the agent is stopped. **Each of these is a new decision record** in `decisioning`, linked to the first, with its own `DecisionInput`, its reason code, its audit row and its `DecisionMade` outbox row, committed in one transaction. A user's decline, an expiry, a revocation, a fulfilment or a stop produce DECLINE with the corresponding reason and lock nothing. An approval runs the re-check:
 1. lock the budget-period rows (section 1);
 2. re-read the mandate version, the ledger and the checkout session's **stored** expiry (no merchant call inside the transaction);
 3. decide APPROVE or DECLINE with reasons;
@@ -73,7 +73,7 @@ Each decision stores its complete **`DecisionInput`** in the audit record. Repla
 - the ledger snapshot used: budget-period totals, the mandate's reserved and counted purchase count, and the earlier purchases the duplicate, split and velocity checks looked at;
 - the FX rates used, with their source and timestamp, the foreign-currency margin applied and the mandate's comparison operator;
 - the clock reading;
-- the configuration in force (thresholds, "when unsure" default, the step-up expiry ceiling and margin) and the step-up expiry computed for this decision.
+- the settings in force (thresholds, "when unsure" default, the step-up expiry ceiling and margin) and the step-up expiry computed for this decision.
 
 A step-up re-check stores its own `DecisionInput` (section 2). A replay test runs over every stored decision in CI against the labelled cases.
 
@@ -99,7 +99,7 @@ The set of enrolled token references and the bank's `settings` are cached from t
 - Two claims of the same due run: one token, the second answered "nothing due" and recorded.
 - A proposal carrying personal data in a line: rejected before any merchant call.
 - An item spec matching zero, one and several offers; the pick rule's result replays from the stored candidates.
-- The step-up expiry per decision: a session shorter than the configured ceiling shortens the expiry; an approval after it is DECLINE "propose again".
+- The step-up expiry per decision: a session shorter than the ceiling in settings shortens the expiry; an approval after it is DECLINE "propose again".
 - A fare in a foreign currency at the limit, one cent over, and inside the margin, under `<` and under `≤`: the margin can only turn APPROVE into DECLINE, never the reverse; a negative margin rate is refused by `settings` validation.
 - Removing the cardholder's last channel suspends the due runs of their standing mandates; adding one resumes them.
 - The `ceiling` function: at the limit, one cent over, a quote total under the limit while the ceiling is over (the ceiling decides), a weighed line in a foreign currency, fees inside and outside the quote; half-even at each step; the components replay from the stored input.

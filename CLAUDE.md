@@ -4,7 +4,7 @@ Payment wallet for AI shopping agents with a deterministic control & security la
 Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BRIEF.md). It replaced the strategist handoff on 2026-10-29. Architecture: [docs/architecture/](docs/architecture/README.md).
 
 ## Current phase
-**Planning.** Architecture style and module cut proposed in ADR-0006 and ADR-0007, to be confirmed by the walking skeleton (T-037). Stack and conventions decided in ADR-0009. No production code until the plan is agreed: T-008 (toolchain), T-037 (skeleton), T-003 (domain model and contracts), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
+**Planning.** Architecture style and module cut proposed in ADR-0006 and ADR-0007, to be confirmed by the walking skeleton (T-037). Stack decided and conventions proposed in ADR-0009. No production code until the plan is agreed: T-008 (toolchain), T-037 (skeleton), T-003 (domain model and contracts), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
 
 ## Domain invariants (never violate; the reviewer checks every one)
 1. No payment without a control-layer decision. Decisions are exactly `APPROVE | DECLINE | STEP_UP`, each with reasons.
