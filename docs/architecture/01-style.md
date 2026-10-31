@@ -22,7 +22,7 @@ Decided in [ADR-0006](../adr/ADR-0006-architecture-style-and-module-cut.md). Thi
 | Microkernel (plug-ins) | **used inside modules** | The decision rules and the per-network checkout adapters are a core plus plug-ins (Strategy behind a port). It is a pattern inside a module, not the shape of the system. |
 | Microservices | rejected for now | Splitting decisioning, ledger and audit into services turns invariants 5 and 7 into sagas and eventual consistency: the wrong failure mode for money. About eight JVMs on the Pi and as many services for a bank to operate, for one developer. Revisit only if a module's load or change rate demands it. |
 | **Service-based** | **chosen for the system** | A few coarse deployables, split where trust or latency demands it, sharing one PostgreSQL with a schema and a role each. The hook responder reads the backend's pre-approvals straight from the database, so a fresh approval is visible at once without a broker. |
-| Service-oriented (ESB) | rejected | An enterprise bus solves integration across many owners; we have one owner and four backend deployables. |
+| Service-oriented (ESB) | rejected | An enterprise bus solves integration across many owners; we have one owner and a handful of backend deployables. |
 | **Event-driven** | **used at the seams** | Follow-ups after a decision (checkout, read models, notifications, network instruction updates, reconciliation) run as events from a transactional outbox. The decision itself stays synchronous: the user waits in chat, and invariant 1 is a gate, not a notification. |
 | Space-based | rejected | Volumes are small. The only echo is that the hook responder answers from a read model built for that one query. |
 
