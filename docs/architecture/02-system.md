@@ -112,6 +112,8 @@ The trusted backend talks to merchants (checkout sessions, product records, offe
 | Merchant account-link tokens (one per cardholder and connector), encrypted under a key per link wrapped by the cardholder's key; never in an event | control-backend (`payments`) |
 | Connector OAuth client credentials (one per admitted connector) | control-backend (`payments`) |
 | The connector gateway's client certificate towards the backend | connector-gateway |
+| The deployment's private CA key for the certificates between our processes ([ADR-0009](../adr/ADR-0009-tech-stack-revision.md)) | the one-shot certificate job (PoC) or the bank's PKI; never a running process |
+| The deployment key-encryption key that wraps the cardholder keys (ADR-0009) | control-backend (`payments`), from a mounted file (PoC) or the deployment's key service |
 
 Never in a repository; only the names of the settings that hold them.
 
