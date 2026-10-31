@@ -1,10 +1,10 @@
 # Agentic Wallet
 
 Payment wallet for AI shopping agents with a deterministic control & security layer.
-Intent: [PROJECT_BRIEF.md](PROJECT_BRIEF.md). Direction and features (M1…, N1…): the strategist handoff it points to, which wins on direction.
+Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BRIEF.md). It replaced the strategist handoff on 2026-10-29. Architecture: [docs/architecture/](docs/architecture/README.md).
 
 ## Current phase
-**Planning.** No production code until the plan is agreed: T-003 (architecture and domain model), T-004 (stack), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
+**Planning.** Architecture style and module cut proposed in ADR-0006 and ADR-0007, to be confirmed by the walking skeleton (T-037). No production code until the plan is agreed: T-004 (stack), T-008 (toolchain), T-037 (skeleton), T-003 (domain model and contracts), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
 
 ## Domain invariants (never violate; the reviewer checks every one)
 1. No payment without a control-layer decision. Decisions are exactly `APPROVE | DECLINE | STEP_UP`, each with reasons.
@@ -36,7 +36,7 @@ Quality first, no rapid development.
 
 ## Data
 - `data/raw/leash-starter/` is an immutable copy; a hook blocks edits and `python3 scripts/data_check.py` verifies its hashes. Derived data goes to `data/derived/` via scripts. Notes: [starting-dataset](docs/data/starting-dataset.md).
-- The `leash` repo is off limits. `../leash-analysis` may be read (the handoff, business and network research), except `lukas/` (confidential).
+- The `leash` repo is off limits. `../leash-analysis` may be read (business and network research; its old handoff is superseded by the brief), except `lukas/` (confidential).
 - Never commit secrets, real card numbers or sandbox account ids. Only the names of the settings that hold them.
 
 ## Commands
