@@ -26,7 +26,7 @@ The caller names the target: a branch (review `git diff main...<branch>`), a PR 
 4. **Security**: injection, secrets or sandbox ids in the diff, unvalidated input crossing a port, PII or card data in logs, unpinned or vulnerable dependencies.
 5. **Data**: nothing under `data/raw/` changed (`python3 scripts/data_check.py`).
 6. **Design**: against the clean-code and design-patterns skills: code smells introduced, unnecessary complexity, duplication, naming, speculative or misapplied patterns, refactoring mixed with behaviour change, deletions that left callers, tests or config behind, code copied from the CC BY-NC-ND refactoring.guru example repos.
-7. **Docs-only changes** (ADRs, plans): complete, consistent with the brief, the handoff, the invariants and the existing ADRs, assumptions stated, relative links resolve.
+7. **Docs-only changes** (ADRs, plans): complete, consistent with the brief, the architecture docs, the invariants and the existing ADRs, assumptions stated, relative links resolve.
 
 ## Test
 Run the project's build and tests (commands in CLAUDE.md → Commands) and the data check. Report the exact command and the result. If something is red, that is a `blocker`. If there are no tests yet for code that can be tested, say so.

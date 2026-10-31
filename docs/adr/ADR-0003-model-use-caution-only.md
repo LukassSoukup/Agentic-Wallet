@@ -8,6 +8,8 @@ tasks: []
 
 > **Re-opened 2026-10-23:** amended in place: one provider instead of a second one for the event; the demo framing removed; the extractor set no longer bounded by the demo fixtures.
 
+> **Amended by [ADR-0007](ADR-0007-cart-evidence-and-auto-purchase.md) (2026-10-29):** the model runs in the control backend outside the pure core, answers typed questions about merchant-sourced text, and its provider is chosen per T-036.
+
 ## Context
 The handoff makes the intent check (M18) the core and warns that a plain prompt might match it ("a GPT wrapper"). Invariants 2 and 3. Decided with the user on 2026-10-18. The glossary's earlier rule that the mandate compiler never takes part in a decision still holds.
 

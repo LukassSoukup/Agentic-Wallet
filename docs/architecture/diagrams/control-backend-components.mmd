@@ -1,0 +1,67 @@
+%% Agentic Wallet: control-backend components. The backend as a few components (groups of modules), the inbound
+%% REST adapter, the outbound ports, and the data moving between them. Drawn on DuctTape.io from
+%% docs/architecture/02-system.md and 03-modules.md, exported as Mermaid on 2026-10-31. Re-import in the editor with
+%% "New diagram -> From Mermaid". Reference only; the pages and ADRs win where they differ.
+%% DuctTape.io Agentic Wallet: control-backend components
+flowchart LR
+  %% ducttape:api REST_API_control_api
+  REST_API_control_api("REST API (control-api)")
+  %% ducttape:mandates mandates_agents_profiles_settings
+  mandates_agents_profiles_settings("mandates, agents, profiles, settings")
+  %% ducttape:engine decision_engine
+  decision_engine("decision engine")
+  %% ducttape:payments payments_checkout
+  payments_checkout("payments & checkout")
+  %% ducttape:outbox transactional_outbox
+  transactional_outbox("transactional outbox")
+  %% ducttape:audit audit_log
+  audit_log("audit log")
+  %% ducttape:activity activity_notifications
+  activity_notifications("activity & notifications")
+  %% ducttape:reconciliation reconciliation
+  reconciliation("reconciliation")
+  %% ducttape:pg PostgreSQL
+  PostgreSQL[("PostgreSQL")]
+  %% ducttape:hook hook_responder
+  hook_responder("hook-responder")
+  %% ducttape:networks payment_networks
+  payment_networks("payment networks")
+  %% ducttape:merchants merchants_connectors
+  merchants_connectors("merchants & connectors")
+  %% ducttape:intent intent_model
+  intent_model("intent model")
+  %% ducttape:fx FX_source
+  FX_source("FX source")
+  %% ducttape:clearing clearing_feed
+  clearing_feed("clearing feed")
+  %% ducttape:channels user_channels
+  user_channels("user channels")
+  %% ducttape:n-hex Hexagonal_one_inbound_adapter_REST_compo
+  Hexagonal_one_inbound_adapter_REST_compo["Hexagonal: one inbound adapter (REST), components of modules in the middle, outbound ports with adapters on the right. Each module keeps its own schema and published API; none reads another's tables."]:::note
+  %% ducttape:n-txn Model_and_network_calls_happen_before_th
+  Model_and_network_calls_happen_before_th["Model and network calls happen before the decision (evidence) or after it (checkout), never inside its transaction. Merchant and agent text is data; it can only make a decision more cautious."]:::note
+  REST_API_control_api -->|"drafts, confirmations, toggles"| mandates_agents_profiles_settings
+  REST_API_control_api -->|"proposals, step-up answers"| decision_engine
+  REST_API_control_api -->|"enrolments, account links"| payments_checkout
+  REST_API_control_api -->|"activity, catalogue reads"| activity_notifications
+  REST_API_control_api -->|"trace ingest; export"| audit_log
+  mandates_agents_profiles_settings -->|"mandate version, status, settings"| decision_engine
+  decision_engine -->|"lines → cart evidence"| payments_checkout
+  decision_engine -->|"typed questions"| intent_model
+  decision_engine -->|"rates"| FX_source
+  decision_engine -->|"DecisionInput, decision"| audit_log
+  decision_engine -->|"one transaction"| PostgreSQL
+  decision_engine -->|"DecisionMade"| transactional_outbox
+  mandates_agents_profiles_settings -->|"mandate, agent events"| transactional_outbox
+  transactional_outbox -->|"APPROVE → checkout"| payments_checkout
+  payments_checkout -->|"credential, confirmation"| payment_networks
+  payments_checkout -->|"sessions, quotes, orders"| merchants_connectors
+  payments_checkout -->|"checkout outcomes"| transactional_outbox
+  transactional_outbox ==>|"every event"| activity_notifications
+  transactional_outbox -->|"decisions, checkouts"| reconciliation
+  clearing_feed -->|"clearing files"| reconciliation
+  activity_notifications ==>|"messages, SSE"| user_channels
+  hook_responder -->|"pre-approvals: read, consume"| PostgreSQL
+  PostgreSQL -->|"hook call log"| reconciliation
+  classDef default fill:#ffffff,stroke:#8a8d93,color:#17181a
+  classDef note fill:#fdf6d8,stroke:#dcdcd7,color:#17181a

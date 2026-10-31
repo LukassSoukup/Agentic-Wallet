@@ -1,0 +1,71 @@
+%% Agentic Wallet: control-backend modules and events. Drawn from docs/architecture/03-modules.md on DuctTape.io and
+%% exported as Mermaid on 2026-10-31. Re-import in the editor with "New diagram -> From Mermaid". Reference only;
+%% 03-modules.md and ADR-0006 win where they differ. Edges are events (through the transactional outbox) unless
+%% marked "API:"; each module's other API uses are in its description in the editor and in the .json import file.
+%% DuctTape.io Agentic Wallet: control-backend modules and events (v2)
+flowchart LR
+  %% ducttape:identity identity
+  identity("identity")
+  %% ducttape:profiles profiles
+  profiles("profiles")
+  %% ducttape:settings settings
+  settings("settings")
+  %% ducttape:agents agents
+  agents("agents")
+  %% ducttape:mandates mandates
+  mandates("mandates")
+  %% ducttape:decisioning decisioning
+  decisioning("decisioning")
+  %% ducttape:ledger ledger
+  ledger("ledger")
+  %% ducttape:payments payments
+  payments("payments")
+  %% ducttape:authorisation authorisation
+  authorisation("authorisation")
+  %% ducttape:reconciliation reconciliation
+  reconciliation("reconciliation")
+  %% ducttape:audit audit
+  audit("audit")
+  %% ducttape:activity activity
+  activity("activity")
+  %% ducttape:notifications notifications
+  notifications("notifications")
+  %% ducttape:shared-kernel shared_kernel
+  shared_kernel("shared-kernel")
+  %% ducttape:control-core control_core_pure_decision_core
+  control_core_pure_decision_core("control-core (pure decision core)")
+  %% ducttape:n-context Each_module_is_a_bounded_context_with_it
+  Each_module_is_a_bounded_context_with_it["Each module is a bounded context with its own schema, a published application API (Java interfaces and records) and events. Nothing reaches into another module's internals or tables."]:::note
+  %% ducttape:n-outbox Event_edges_travel_through_the_transacti
+  Event_edges_travel_through_the_transacti["Event edges travel through the transactional outbox: rows commit with the decision; listeners are idempotent by event id or purchaseKey and tolerate reordering. No message broker in v1."]:::note
+  %% ducttape:n-not-drawn Edges_are_events_outbox_unless_marked_AP
+  Edges_are_events_outbox_unless_marked_AP["Edges are events (outbox) unless marked API; each module's other API uses are in its description. Every module writes audit through the AuditLog port; activity listens to every event."]:::note
+  %% ducttape:n-rules Nothing_depends_on_decisioning_except_th
+  Nothing_depends_on_decisioning_except_th["Nothing depends on decisioning except through its events; payments starts a checkout only from a DecisionMade with outcome APPROVE; no cycles (Spring Modulith fails the build on one)."]:::note
+  mandates -->|"MandateConfirmed, Revoked, Fulfilled"| agents
+  mandates -->|"MandateConfirmed, Revoked, Fulfilled"| payments
+  mandates -->|"MandateRevoked, Fulfilled"| decisioning
+  mandates -->|"MandateFulfilled"| notifications
+  mandates -->|"API: caller identity"| identity
+  agents -->|"AgentStopped, Resumed, ConnectorToggled"| payments
+  agents -->|"AgentStopped, Resumed, ConnectorToggled"| decisioning
+  profiles -->|"ProfileChanged"| agents
+  settings -->|"SettingsChanged"| payments
+  settings -->|"SettingsChanged"| decisioning
+  settings -->|"SettingsChanged"| notifications
+  decisioning -->|"DecisionMade (APPROVE → checkout)"| payments
+  decisioning -->|"DecisionMade (STEP_UP, DECLINE)"| notifications
+  decisioning -->|"DecisionMade"| activity
+  decisioning -->|"API: AuditLog, DecisionInput"| audit
+  decisioning -->|"API: reservation, count"| ledger
+  decisioning -->|"API: pre-approval"| authorisation
+  payments -->|"AccountLinkChanged, ConnectorStateChanged"| decisioning
+  payments -->|"CardEnrolled"| agents
+  payments -->|"CheckoutCompleted"| mandates
+  payments -->|"CredentialReleased, Checkout*"| reconciliation
+  payments -->|"Checkout*, link and connector changes"| notifications
+  authorisation -->|"PreApprovalMatched, Unapproved…Seen"| reconciliation
+  reconciliation -->|"MismatchCaseOpened"| notifications
+  control_core_pure_decision_core -->|"depends only on"| shared_kernel
+  classDef default fill:#ffffff,stroke:#8a8d93,color:#17181a
+  classDef note fill:#fdf6d8,stroke:#dcdcd7,color:#17181a

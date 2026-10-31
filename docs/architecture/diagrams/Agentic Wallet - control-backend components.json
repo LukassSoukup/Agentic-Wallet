@@ -1,0 +1,601 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    {
+      "id": "api",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "kind": "api-server",
+        "label": "REST API (control-api)",
+        "vendor": null,
+        "model": null,
+        "description": "INBOUND ADAPTER. The backend's one entry: the OpenAPI contract in control-api. Agent side, called by control-mcp with the agent's session or run token: propose_purchase (purchaseKey, merchant reference, lines, the agent's text as untrusted), get_decision, mandates and activity reads, draft_mandate, the trace ingest, the run claim. Cardholder side, called by the web app as the user: confirm a mandate, answer a step-up, profile, connector toggles, account links, stop switch, activity. Console side for the bank: settings, connector approval and enablement. Mutual TLS with control-mcp and the connector gateway; the token is verified here by identity.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "start"
+      }
+    },
+    {
+      "id": "mandates",
+      "type": "aiNode",
+      "position": {
+        "x": 472,
+        "y": 321
+      },
+      "data": {
+        "kind": "box",
+        "label": "mandates, agents, profiles, settings",
+        "vendor": null,
+        "model": null,
+        "description": "WHAT THE AGENT MAY DO. Modules identity, profiles, settings, agents, mandates. Data in: mandate drafts and confirmations, revocations, agent stop and resume, connector toggles, profile edits, the bank's settings. Data held: confirmed mandate versions (limits, counts, policies), agent instances and enrolled cards, due runs of standing mandates, the cardholder's buyer, traveller and delivery data (versioned, read by others only by version id), the bank's controls. Data out: the mandate version, agent status and configuration a decision reads; MandateConfirmed, AgentStopped, ConnectorToggled, ProfileChanged, SettingsChanged events.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "engine",
+      "type": "aiNode",
+      "position": {
+        "x": 953,
+        "y": 339
+      },
+      "data": {
+        "kind": "box",
+        "label": "decision engine",
+        "vendor": null,
+        "model": null,
+        "description": "THE CONTROL LAYER. Modules decisioning, ledger, authorisation and the pure control-core. Data in: a proposal, the mandate version, agent status, settings in force, the profile version id, the merchant's priced cart or quote from payments, answers from the intent model, FX rates. Work: decide(DecisionInput) by fixed rules, then the caution combiner (APPROVE < STEP_UP < DECLINE); ledger reservations under budget-period locks (only approved purchases count); one pre-approval per APPROVE for the bank's hook. Data out, committed in ONE transaction: the decision with reasons, the reservation, the pre-approval, the audit record with the full DecisionInput, the DecisionMade event. Step-ups and their outcomes are second decisions.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "payments",
+      "type": "aiNode",
+      "position": {
+        "x": 1806,
+        "y": 231
+      },
+      "data": {
+        "kind": "box",
+        "label": "payments & checkout",
+        "vendor": null,
+        "model": null,
+        "description": "MONEY MOVES HERE, ONLY AFTER AN APPROVE. Module payments. Data in: the merchant reference and lines (to gather evidence before the decision), DecisionMade with APPROVE (to check out after it), card enrolments and account links from the app. Work: route selection, the merchant directory, checkout sessions, connector quotes and slots, persisted checkout attempts, a single-use credential for exactly the approved amount, completion with an idempotency key from the purchaseKey, network confirmation with the decision id. Data out: the priced cart or quote as evidence; CheckoutCompleted, CheckoutFailed, CheckoutOutcomeUnknown, CheckoutPendingUser, CredentialReleased, CardEnrolled, AccountLinkChanged, ConnectorStateChanged. The credential lives in memory for one call; account-link tokens are stored encrypted per cardholder and connector.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "outbox",
+      "type": "aiNode",
+      "position": {
+        "x": 1390,
+        "y": 159
+      },
+      "data": {
+        "kind": "queue",
+        "label": "transactional outbox",
+        "vendor": null,
+        "model": null,
+        "description": "HOW THE PARTS TALK AFTER A COMMIT. Events are rows written in the publisher's transaction and delivered afterwards to in-process listeners, idempotent by event id or purchaseKey, tolerant of reordering. No message broker in v1. Carries DecisionMade to checkout, every event to the read models, the user-facing ones to notifications, checkout and hook events to reconciliation.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "audit",
+      "type": "aiNode",
+      "position": {
+        "x": 1390,
+        "y": 267
+      },
+      "data": {
+        "kind": "box",
+        "label": "audit log",
+        "vendor": null,
+        "model": null,
+        "description": "THE RECORD. Module audit: an append-only event store (no UPDATE or DELETE; a trigger rejects them), the DecisionInput per decision as the replay unit, the ingested conversation and agent trace (untrusted, capped), replay and export (JSON Lines per event plus a per-purchase summary). Written by every component through the AuditLog port inside its own transaction; only the decision's write is drawn.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "activity",
+      "type": "aiNode",
+      "position": {
+        "x": 1806,
+        "y": 339
+      },
+      "data": {
+        "kind": "box",
+        "label": "activity & notifications",
+        "vendor": null,
+        "model": null,
+        "description": "WHAT THE USER AND THE BANK SEE. Modules activity and notifications. Data in: every event. Data out: read models for the cardholder app, the console and the agent's read tools (what the agent bought and why, the watch state, the connector catalogue); messages to the user's channels when something needs them (step-up, network authentication, checkout failed, mismatch case, connector suspended) and, for standing mandates, what happened without them.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "reconciliation",
+      "type": "aiNode",
+      "position": {
+        "x": 1806,
+        "y": 447
+      },
+      "data": {
+        "kind": "box",
+        "label": "reconciliation",
+        "vendor": null,
+        "model": null,
+        "description": "DID THE MONEY MATCH THE DECISION. Module reconciliation. Data in: decisions and checkout outcomes (events), the hook's authorisation records, the bank's clearing files (synthetic in the PoC), a connector merchant's order record and invoice lines. Work: the three-way match decision, authorisation, clearing; a billed amount above the limit or the ceiling flagged; money that settled without an approval kept apart. Data out: mismatch cases with drafted evidence (MismatchCaseOpened).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "pg",
+      "type": "aiNode",
+      "position": {
+        "x": 1390,
+        "y": 537
+      },
+      "data": {
+        "kind": "relational-db",
+        "label": "PostgreSQL",
+        "vendor": "postgresql",
+        "model": null,
+        "description": "One instance: a schema per module plus the outbox and the event publication registry, a role per deployable; audit tables insert-only. Every component writes its own schemas; only the decision's one-transaction write and the hook's read are drawn. hook-responder reads published views of authorisation, agents and settings and writes its own hook schema.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "pass"
+      }
+    },
+    {
+      "id": "hook",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 108
+      },
+      "data": {
+        "kind": "api-server",
+        "label": "hook-responder",
+        "vendor": null,
+        "model": null,
+        "description": "A separate deployable, drawn for its data path: it reads the pre-approvals the decision engine wrote (published views) and consumes them when the bank processor's authorisation matches; its call log is read back by authorisation and reconciliation. It never calls the backend on the request path.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "start"
+      }
+    },
+    {
+      "id": "networks",
+      "type": "aiNode",
+      "position": {
+        "x": 2264,
+        "y": 240
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "payment networks",
+        "vendor": null,
+        "model": null,
+        "description": "OUTBOUND PORT PaymentNetwork: Visa Intelligent Commerce (Cybersource) and Mastercard Agent Pay (simulated). Out: card enrolment, network instruction from a confirmed mandate, credential request for exactly this amount and merchant, confirmation with the decision id. In: the merchant registry, the credential (in memory only), pending-authentication states.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "merchants",
+      "type": "aiNode",
+      "position": {
+        "x": 2264,
+        "y": 348
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "merchants & connectors",
+        "vendor": null,
+        "model": null,
+        "description": "OUTBOUND PORTS Checkout, MerchantCatalogue, MerchantAccount: protocol checkout sessions (UCP or ACP), offer searches and product records, and admitted connectors' account, quote and order tools with the user's account-link token. Addresses come only from the merchant directory, never from the agent; responses are parsed with strict schemas, free text typed UntrustedText. In: the priced cart or quote (tier-1 evidence), product records, order records.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "intent",
+      "type": "aiNode",
+      "position": {
+        "x": 1390,
+        "y": 357
+      },
+      "data": {
+        "kind": "llm",
+        "label": "intent model",
+        "vendor": null,
+        "model": null,
+        "description": "OUTBOUND PORT IntentModel: fixed, typed questions about the merchant's product text, asked outside the pure core. In: an answer with a score, or no answer. It can raise the outcome, never lower it.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "fx",
+      "type": "aiNode",
+      "position": {
+        "x": 1390,
+        "y": 447
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "FX source",
+        "vendor": null,
+        "model": null,
+        "description": "OUTBOUND PORT FxRates, with a small cache: rates for conversion to the base currency before every comparison, half-even to 2 dp; the foreign-currency margin from settings only makes a rule stricter.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "clearing",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 216
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "clearing feed",
+        "vendor": null,
+        "model": null,
+        "description": "OUTBOUND PORT ClearingFeed: the bank's clearing records (capture files), synthetic files in the PoC. In: cleared amounts, merchant descriptors and category codes.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null,
+        "role": "start"
+      }
+    },
+    {
+      "id": "channels",
+      "type": "aiNode",
+      "position": {
+        "x": 2264,
+        "y": 456
+      },
+      "data": {
+        "kind": "external-api",
+        "label": "user channels",
+        "vendor": null,
+        "model": null,
+        "description": "OUTBOUND PORT Notifier: server-sent events to the open web app, e-mail or web push in the PoC, the bank's app later. Out: what needs the user and what happened without them.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-hex",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 306
+      },
+      "width": 200,
+      "height": 208,
+      "data": {
+        "kind": "note",
+        "label": "Hexagonal: one inbound adapter (REST), components of modules in the middle, outbound ports with adapters on the right. Each module keeps its own schema and published API; none reads another's tables.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-txn",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 546
+      },
+      "width": 200,
+      "height": 208,
+      "data": {
+        "kind": "note",
+        "label": "Model and network calls happen before the decision (evidence) or after it (checkout), never inside its transaction. Merchant and agent text is data; it can only make a decision more cautious.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "api",
+      "target": "mandates",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "drafts, confirmations, toggles",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e2",
+      "source": "api",
+      "target": "engine",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "proposals, step-up answers",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e3",
+      "source": "api",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "enrolments, account links",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e4",
+      "source": "api",
+      "target": "activity",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "activity, catalogue reads",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e5",
+      "source": "api",
+      "target": "audit",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "trace ingest; export",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e6",
+      "source": "mandates",
+      "target": "engine",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "mandate version, status, settings",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e7",
+      "source": "engine",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "lines → cart evidence",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e8",
+      "source": "engine",
+      "target": "intent",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "typed questions",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e9",
+      "source": "engine",
+      "target": "fx",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "rates",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e10",
+      "source": "engine",
+      "target": "audit",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DecisionInput, decision",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e11",
+      "source": "engine",
+      "target": "pg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "one transaction",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e12",
+      "source": "engine",
+      "target": "outbox",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DecisionMade",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e13",
+      "source": "mandates",
+      "target": "outbox",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "mandate, agent events",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e14",
+      "source": "outbox",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "APPROVE → checkout",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e15",
+      "source": "payments",
+      "target": "networks",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "credential, confirmation",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e16",
+      "source": "payments",
+      "target": "merchants",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "sessions, quotes, orders",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "data"
+    },
+    {
+      "id": "e17",
+      "source": "payments",
+      "target": "outbox",
+      "sourceHandle": "l",
+      "targetHandle": "r",
+      "label": "checkout outcomes",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e18",
+      "source": "outbox",
+      "target": "activity",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "every event",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "stream"
+    },
+    {
+      "id": "e19",
+      "source": "outbox",
+      "target": "reconciliation",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "decisions, checkouts",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e20",
+      "source": "clearing",
+      "target": "reconciliation",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "clearing files",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "document"
+    },
+    {
+      "id": "e21",
+      "source": "activity",
+      "target": "channels",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "messages, SSE",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed",
+      "flow": "stream"
+    },
+    {
+      "id": "e22",
+      "source": "hook",
+      "target": "pg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "pre-approvals: read, consume",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e23",
+      "source": "pg",
+      "target": "reconciliation",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "hook call log",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}

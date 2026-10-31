@@ -1,0 +1,631 @@
+{
+  "schemaVersion": 1,
+  "nodes": [
+    {
+      "id": "identity",
+      "type": "aiNode",
+      "position": {
+        "x": 502,
+        "y": 642
+      },
+      "data": {
+        "kind": "box",
+        "label": "identity",
+        "vendor": null,
+        "model": null,
+        "description": "Caller identity: cardholder accounts (local accounts in the PoC, OIDC mapping later), operator roles; agent session tokens, agent-instance credentials and per-run agent run tokens (issue and verify). Publishes nothing. (03-modules.md)",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "profiles",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "kind": "box",
+        "label": "profiles",
+        "vendor": null,
+        "model": null,
+        "description": "Checkout data and channels: the cardholder's buyer, traveller and delivery entries (name, date of birth, contact, travel document, address) and their notification channels, versioned and insert-only, edited only from the cardholder app, every change audited; other modules hold version ids, never the data. Publishes ProfileChanged. Uses (API): identity.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "settings",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 90
+      },
+      "data": {
+        "kind": "box",
+        "label": "settings",
+        "vendor": null,
+        "model": null,
+        "description": "Bank control (N15): per-deployment and per-bank settings: allowed models and the LLM spend cap per user, the step-up expiry ceiling and session margin, the pre-approval window, the default 'when unsure', the foreign-currency margin, hook mode and fallback, kill switch, ingest caps, proposal rate limits and per-mandate caps, which admitted connectors this deployment enables and whether the one-line mode is allowed; every change audited; the harness reads the part that concerns it through get_agent_configuration. Publishes SettingsChanged. Uses (API): identity.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "agents",
+      "type": "aiNode",
+      "position": {
+        "x": 502,
+        "y": 552
+      },
+      "data": {
+        "kind": "box",
+        "label": "agents",
+        "vendor": null,
+        "model": null,
+        "description": "M1, V9 runs, V10: agent instances (owner, status, bound mandates), enrolled cards as network token references (from CardEnrolled), stop switch; the due runs of standing mandates (claimed once each, counted against the caps); the user's connector toggles per agent instance (a toggle only gates that instance's use of a connector and its link, it is not a permission). Publishes AgentStopped, AgentResumed, RunClaimed, ConnectorToggled. Uses (API): identity, settings (a connector can be turned on only while settings enables it), Clock.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "mandates",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 180
+      },
+      "data": {
+        "kind": "box",
+        "label": "mandates",
+        "vendor": null,
+        "model": null,
+        "description": "M2, M12, M14, V9, V10: drafts, versions, confirmation, tighten/loosen diff, revocation; a mandate's purchase count, run frequency, strict-or-inclusive limit, profile entries it may use, 'when unsure' policy, the linked account it may order through, substitution policy and delivery slot window as versioned facts; fulfilled when, on CheckoutCompleted, the count read through ledger's API is reached. Publishes MandateConfirmed, MandateRevoked, MandateFulfilled. Uses (API): identity, agents, profiles (the entry and a channel exist), ledger (the count).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "decisioning",
+      "type": "aiNode",
+      "position": {
+        "x": 1025,
+        "y": 642
+      },
+      "data": {
+        "kind": "box",
+        "label": "decisioning",
+        "vendor": null,
+        "model": null,
+        "description": "M3, M5, M18: proposals, the decision pipeline, rules (each with its own reason code), the caution combiner, the intent check rules, the step-up expiry per decision, step-ups and every one of their outcomes as a second decision (approve with re-check, decline, expiry by a scheduled job on the Clock port, revoke, stop). Publishes DecisionMade (outcome APPROVE, DECLINE or STEP_UP, with a reason code). Uses the IntentModel, RiskSignal, FxRates and Clock ports. Uses (API): mandates (the version), agents (status), settings (configuration in force), profiles (the current version id only), ledger (duplicate, split order, velocity; the reservation in the same transaction), payments (reachability, route, cart evidence, resolved offers, connector quotes, link and connector state), authorisation (the pre-approval in the same transaction).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "ledger",
+      "type": "aiNode",
+      "position": {
+        "x": 1562,
+        "y": 462
+      },
+      "data": {
+        "kind": "box",
+        "label": "ledger",
+        "vendor": null,
+        "model": null,
+        "description": "M4: reservations, budget periods, the counting rule, the purchase count per mandate (locked in the fixed order after the budget-period rows), duplicate and split-order lookups. Publishes nothing: changes reach read models through the events of the modules that call it. Uses FxRates and Clock.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "payments",
+      "type": "aiNode",
+      "position": {
+        "x": 1562,
+        "y": 822
+      },
+      "data": {
+        "kind": "box",
+        "label": "payments",
+        "vendor": null,
+        "model": null,
+        "description": "M7, M8, enrolment: card enrolment with the networks; route selection before the checkout session; the merchant directory; item spec resolution; checkout sessions with their stored expiry; checkout attempts; network instructions; credential release; checkout completion; network confirmation. Merchant connectors (ADR-0008): the admitted connector manifests (versions, stored tool definitions and hashes, tool classes, state), published to the connector gateway; the account links (one OAuth token per cardholder and connector, encrypted under a key per link wrapped by the cardholder's key); the connector adapters behind the Checkout, MerchantCatalogue and MerchantAccount ports with VIC, Agent Pay and connector adapters. Publishes CardEnrolled, CredentialReleased (never the credential), CheckoutPendingUser, CheckoutOutcomeUnknown, CheckoutCompleted, CheckoutFailed, CheckoutCancelled, AccountLinkChanged, ConnectorStateChanged. Uses (API): profiles (read by version id, at checkout), agents (the toggle is on), settings (connector enabled; the one-line mode), ledger and authorisation (release the reservation and the pre-approval in payments' transaction).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "authorisation",
+      "type": "aiNode",
+      "position": {
+        "x": 1562,
+        "y": 552
+      },
+      "data": {
+        "kind": "box",
+        "label": "authorisation",
+        "vendor": null,
+        "model": null,
+        "description": "Bank hook: pre-approvals (one per APPROVE: token, amount ceiling, merchant, window, unused), the match rule, processor profiles, reading the hook call log. Publishes PreApprovalMatched, UnapprovedAuthorisationSeen.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "reconciliation",
+      "type": "aiNode",
+      "position": {
+        "x": 2071,
+        "y": 633
+      },
+      "data": {
+        "kind": "box",
+        "label": "reconciliation",
+        "vendor": null,
+        "model": null,
+        "description": "M9–M11: clearing records, the three-way match (decision, authorisation, clearing), a cleared billing amount above the mandate's limit in the base currency flagged, mismatch cases with drafted evidence, the record of money that settled without an approval; for connector orders, the merchant's order record and invoice lines matched against the approved lines and the ceiling. Publishes MismatchCaseOpened. Uses the ClearingFeed port. Uses (API): payments (the merchant's order record).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "audit",
+      "type": "aiNode",
+      "position": {
+        "x": 1562,
+        "y": 642
+      },
+      "data": {
+        "kind": "box",
+        "label": "audit",
+        "vendor": null,
+        "model": null,
+        "description": "M6: the append-only event store, the stored DecisionInput per decision, ingested conversation and agent trace (untrusted, capped), replay, export. Written through the AuditLog port by every module, inside the module's transaction; only the decision's write is drawn.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "activity",
+      "type": "aiNode",
+      "position": {
+        "x": 1562,
+        "y": 732
+      },
+      "data": {
+        "kind": "box",
+        "label": "activity",
+        "vendor": null,
+        "model": null,
+        "description": "M13, M15, console: read models for the cardholder app, the console and the chat's read tools, built from events; the state of each standing mandate's watch; the connector catalogue as the user sees it and as the console sees it. Listens to everyone's events and never writes another module's data; only DecisionMade is drawn.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "notifications",
+      "type": "aiNode",
+      "position": {
+        "x": 2447,
+        "y": 642
+      },
+      "data": {
+        "kind": "box",
+        "label": "notifications",
+        "vendor": null,
+        "model": null,
+        "description": "M5, V9, V10: delivery to the user's channels from profiles (server-sent events to the open web app; e-mail or web push in the PoC; the bank's app later) behind a Notifier port; telling the user something needs them and, for standing mandates, what happened without them. Uses (API): profiles (channels).",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "shared-kernel",
+      "type": "aiNode",
+      "position": {
+        "x": 502,
+        "y": 732
+      },
+      "data": {
+        "kind": "box",
+        "label": "shared-kernel",
+        "vendor": null,
+        "model": null,
+        "description": "Pure Java, no dependencies: Money (exact decimal, scale 2, half-even, one currency), the FxRates port, typed ids, UntrustedText, Clock and Random ports, PurchaseKey, the tagged external reference, the typed ItemSpec categories, ConnectorId, the ConnectorToolClass enum, and the events package with every event type consumed outside its publishing module (ids, amounts and enums only). A listener depends on the kernel, not on the publisher, so the module graph stays acyclic in code.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "control-core",
+      "type": "aiNode",
+      "position": {
+        "x": 0,
+        "y": 270
+      },
+      "data": {
+        "kind": "box",
+        "label": "control-core (pure decision core)",
+        "vendor": null,
+        "model": null,
+        "description": "Pure Java: the domain of every control module, the rules, the combiner, the pre-approval match rule, the ports; depends only on shared-kernel. No framework, database, HTTP, clock or random dependency, so the compiler enforces invariant 9; ArchUnit is the second check. Mirrors the backend's module packages; shared with hook-responder so the backend and the hook apply exactly the same match rule.",
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-context",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 414
+      },
+      "width": 200,
+      "height": 208,
+      "data": {
+        "kind": "note",
+        "label": "Each module is a bounded context with its own schema, a published application API (Java interfaces and records) and events. Nothing reaches into another module's internals or tables.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-outbox",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 654
+      },
+      "width": 200,
+      "height": 208,
+      "data": {
+        "kind": "note",
+        "label": "Event edges travel through the transactional outbox: rows commit with the decision; listeners are idempotent by event id or purchaseKey and tolerate reordering. No message broker in v1.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-not-drawn",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 894
+      },
+      "width": 200,
+      "height": 208,
+      "data": {
+        "kind": "note",
+        "label": "Edges are events (outbox) unless marked API; each module's other API uses are in its description. Every module writes audit through the AuditLog port; activity listens to every event.",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    },
+    {
+      "id": "n-rules",
+      "type": "note",
+      "position": {
+        "x": 0,
+        "y": 1134
+      },
+      "width": 200,
+      "height": 208,
+      "data": {
+        "kind": "note",
+        "label": "Nothing depends on decisioning except through its events; payments starts a checkout only from a DecisionMade with outcome APPROVE; no cycles (Spring Modulith fails the build on one).",
+        "vendor": null,
+        "model": null,
+        "description": null,
+        "color": null,
+        "background": null,
+        "icon": null,
+        "href": null
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "mandates",
+      "target": "agents",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MandateConfirmed, Revoked, Fulfilled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e2",
+      "source": "mandates",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MandateConfirmed, Revoked, Fulfilled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e3",
+      "source": "mandates",
+      "target": "decisioning",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MandateRevoked, Fulfilled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e4",
+      "source": "mandates",
+      "target": "notifications",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MandateFulfilled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e5",
+      "source": "mandates",
+      "target": "identity",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "API: caller identity",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e6",
+      "source": "agents",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "AgentStopped, Resumed, ConnectorToggled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e7",
+      "source": "agents",
+      "target": "decisioning",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "AgentStopped, Resumed, ConnectorToggled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e8",
+      "source": "profiles",
+      "target": "agents",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "ProfileChanged",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e9",
+      "source": "settings",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "SettingsChanged",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e10",
+      "source": "settings",
+      "target": "decisioning",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "SettingsChanged",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e11",
+      "source": "settings",
+      "target": "notifications",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "SettingsChanged",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e12",
+      "source": "decisioning",
+      "target": "payments",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DecisionMade (APPROVE → checkout)",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e13",
+      "source": "decisioning",
+      "target": "notifications",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DecisionMade (STEP_UP, DECLINE)",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e14",
+      "source": "decisioning",
+      "target": "activity",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "DecisionMade",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e15",
+      "source": "decisioning",
+      "target": "audit",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "API: AuditLog, DecisionInput",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e16",
+      "source": "decisioning",
+      "target": "ledger",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "API: reservation, count",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e17",
+      "source": "decisioning",
+      "target": "authorisation",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "API: pre-approval",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e18",
+      "source": "payments",
+      "target": "decisioning",
+      "sourceHandle": "l",
+      "targetHandle": "r",
+      "label": "AccountLinkChanged, ConnectorStateChanged",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e19",
+      "source": "payments",
+      "target": "agents",
+      "sourceHandle": "l",
+      "targetHandle": "r",
+      "label": "CardEnrolled",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e20",
+      "source": "payments",
+      "target": "mandates",
+      "sourceHandle": "l",
+      "targetHandle": "r",
+      "label": "CheckoutCompleted",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e21",
+      "source": "payments",
+      "target": "reconciliation",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "CredentialReleased, Checkout*",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e22",
+      "source": "payments",
+      "target": "notifications",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "Checkout*, link and connector changes",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e23",
+      "source": "authorisation",
+      "target": "reconciliation",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "PreApprovalMatched, Unapproved…Seen",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e24",
+      "source": "reconciliation",
+      "target": "notifications",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "MismatchCaseOpened",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    },
+    {
+      "id": "e25",
+      "source": "control-core",
+      "target": "shared-kernel",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "label": "depends only on",
+      "type": "smoothstep",
+      "markerEnd": "arrowclosed"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}
