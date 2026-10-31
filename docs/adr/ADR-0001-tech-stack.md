@@ -6,7 +6,7 @@ tasks: []
 ---
 # ADR-0001: Tech stack: Java 25, Spring Boot 4, PostgreSQL with plain SQL, React + TypeScript UI
 
-> **Superseded on 2026-10-31 by [ADR-0009](ADR-0009-tech-stack-revision.md)** (T-004): decided for a 26-hour hackathon; the module layout had already been superseded by [ADR-0006](ADR-0006-architecture-style-and-module-cut.md). Re-opened 2026-10-23 for that purpose. The text below is kept as written.
+> **Superseded on 2026-10-31 by [ADR-0009](ADR-0009-tech-stack-revision.md)** (T-004): it was decided for a 26-hour hackathon and re-opened on 2026-10-23 for this revision; its module layout had already been superseded by [ADR-0006](ADR-0006-architecture-style-and-module-cut.md). The text below is kept as written.
 
 ## Context
 The brief prefers Java (Spring Boot), Hibernate/JPA and PostgreSQL. It requires:
