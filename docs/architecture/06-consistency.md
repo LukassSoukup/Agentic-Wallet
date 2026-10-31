@@ -14,7 +14,7 @@ Two proposals, or a proposal and a step-up approval, can arrive at the same mome
 - **The purchase count** of a mandate (one for a one-shot watch) is kept the same way, in `ledger` only: one **purchase-count row** per mandate with reserved and counted purchases, locked with `SELECT … FOR UPDATE` after the budget-period rows, by mandate id, so two runs racing for the last purchase get exactly one APPROVE. It is reserved at APPROVE, counted at `COMPLETED`, released on `FAILED` or `CANCELLED`, held while `UNKNOWN`. Each counted purchase records the mandate version it was approved under, so the first-run rule for a merchant-derived list can ask "any completed purchase under this version?". A per-purchase ceiling alone would let two offers at two merchants both pass; the count is what makes "buy one ticket" mean one. `mandates` reads it through `ledger`'s API to raise `MandateFulfilled`.
 
 ## 2. Every step-up outcome is a second decision
-A STEP_UP ends in exactly one of: the user approves, the user declines, the question expires (the scheduled job in `decisioning`; the expiry is set per decision as `min(the configured ceiling, the stored session expiry − a margin)` and stored in the `DecisionInput`), the mandate is revoked or fulfilled, the agent is stopped. **Each of these is a new decision record** in `decisioning`, linked to the first, with its own `DecisionInput`, its reason code, its audit row and its `DecisionMade` outbox row, committed in one transaction. A user's decline, an expiry, a revocation, a fulfilment or a stop produce DECLINE with the corresponding reason and lock nothing. An approval runs the re-check:
+A STEP_UP ends in exactly one of: the user approves, the user declines, the question expires (the scheduled job in `decisioning`; the expiry is set per decision as `min(the ceiling in settings, the stored session expiry − a margin)` and stored in the `DecisionInput`), the mandate is revoked or fulfilled, the agent is stopped. **Each of these is a new decision record** in `decisioning`, linked to the first, with its own `DecisionInput`, its reason code, its audit row and its `DecisionMade` outbox row, committed in one transaction. A user's decline, an expiry, a revocation, a fulfilment or a stop produce DECLINE with the corresponding reason and lock nothing. An approval runs the re-check:
 1. lock the budget-period rows (section 1);
 2. re-read the mandate version, the ledger and the checkout session's **stored** expiry (no merchant call inside the transaction);
 3. decide APPROVE or DECLINE with reasons;
@@ -35,7 +35,7 @@ CREATED ──▶ CREDENTIAL_REQUESTED ──▶ COMPLETING ──▶ COMPLETED
 ```
 
 - Each transition is committed **before** the remote call it announces. The credential exists only in memory between `CREDENTIAL_REQUESTED` and the completion call.
-- **At most one credential request per decision.** If a listener finds an attempt already in `CREDENTIAL_REQUESTED` or `COMPLETING` (a crash, or a redelivered event), it never asks for a second credential. It resolves the attempt by reading the merchant's checkout session status (and the network confirmation where one exists). Completed means `COMPLETED`. Not completed means `FAILED`, and the credential expires unused.
+- **At most one credential request per decision.** If a listener finds an attempt already in `CREDENTIAL_REQUESTED` or `COMPLETING` (a crash, or a redelivered event), it never asks for a second credential. Every transition is a compare-and-set on the state it expects, under the row lock, so whoever commits second changes nothing, and a listener that no longer finds `CREDENTIAL_REQUESTED` never uses its credential. Each of those two transitions stores on the attempt row the deadline of the call it announces plus the bound of the follow-up commit ([ADR-0009](../adr/ADR-0009-tech-stack-revision.md) B6); before that deadline a redelivery does nothing, because the first call may still be running. After it only the resolver job acts: it reads the merchant's checkout session status (and the network confirmation where one exists). Confirmed completed means `COMPLETED`. Confirmed not completed and no longer completable means `FAILED`, and the credential expires unused. Anything else means `UNKNOWN`, the timeout rule below, never a `FAILED` on missing evidence.
 - **A timeout is `UNKNOWN`, never `FAILED`.** While an attempt is `UNKNOWN`, the reservation and the pre-approval stay in force. Entering `UNKNOWN` publishes `CheckoutOutcomeUnknown`, so `activity` shows the honest state and `notifications` can tell the user. A resolver job queries the session status. If the hook or reconciliation sees an authorisation that matches, the attempt is `COMPLETED`. If the pre-approval window ends without one, it is `FAILED`.
 - **`PENDING_USER`:** the network answered that the cardholder must authenticate (its own passkey or app step). The reservation and the pre-approval stay; the `CheckoutPendingUser` event lets `notifications` tell the user; the attempt continues when the network reports success, and goes to `FAILED` when the network's pending state ends without it, the **stored checkout session expiry** passes, or the pre-approval window closes, whichever is first.
 - **`COMPLETED`:** `payments` calls `ledger.count(decisionId)` in the same transaction as the state change and the `CheckoutCompleted` outbox row.
@@ -71,9 +71,10 @@ Each decision stores its complete **`DecisionInput`** in the audit record. Repla
 - the intent model's questions, answers, scores, model id and version, or "no answer" with the reason;
 - the risk signals and their sources;
 - the ledger snapshot used: budget-period totals, the mandate's reserved and counted purchase count, and the earlier purchases the duplicate, split and velocity checks looked at;
-- the FX rates used, with their source and timestamp, the foreign-currency margin applied and the mandate's comparison operator;
+- the base currency, the FX rates used, with their source and timestamp, or the source's named answer (no rate for the currency, unavailable, stale), the foreign-currency margin applied and the mandate's comparison operator;
 - the clock reading;
-- the configuration in force (thresholds, "when unsure" default, the step-up expiry ceiling and margin) and the step-up expiry computed for this decision.
+- the `DecisionInput`'s schema version and the rule set's version ([ADR-0009](../adr/ADR-0009-tech-stack-revision.md) B7);
+- the settings in force (thresholds, "when unsure" default, the step-up expiry ceiling and margin) and the step-up expiry computed for this decision.
 
 A step-up re-check stores its own `DecisionInput` (section 2). A replay test runs over every stored decision in CI against the labelled cases.
 
@@ -99,7 +100,7 @@ The set of enrolled token references and the bank's `settings` are cached from t
 - Two claims of the same due run: one token, the second answered "nothing due" and recorded.
 - A proposal carrying personal data in a line: rejected before any merchant call.
 - An item spec matching zero, one and several offers; the pick rule's result replays from the stored candidates.
-- The step-up expiry per decision: a session shorter than the configured ceiling shortens the expiry; an approval after it is DECLINE "propose again".
+- The step-up expiry per decision: a session shorter than the ceiling in settings shortens the expiry; an approval after it is DECLINE "propose again".
 - A fare in a foreign currency at the limit, one cent over, and inside the margin, under `<` and under `≤`: the margin can only turn APPROVE into DECLINE, never the reverse; a negative margin rate is refused by `settings` validation.
 - Removing the cardholder's last channel suspends the due runs of their standing mandates; adding one resumes them.
 - The `ceiling` function: at the limit, one cent over, a quote total under the limit while the ceiling is over (the ceiling decides), a weighed line in a foreign currency, fees inside and outside the quote; half-even at each step; the components replay from the stored input.
@@ -115,7 +116,8 @@ The set of enrolled token references and the bank's `settings` are cached from t
 - The first run of a merchant-derived list is STEP_UP by its own reason code even under "decline and tell me"; the second run, after a completed purchase, is not.
 - An OAuth callback with a wrong `state` or a wrong issuer is refused and recorded.
 - The harness configured with a third server address fails to start; a tool result or conversation naming a server changes nothing; an egress attempt outside the policy is refused and logged.
-- A crash at each checkout-attempt transition: never two credential requests, and the final state is correct.
+- A crash at each checkout-attempt transition: never two credential requests, and the final state is correct. A redelivered `DecisionMade` while the attempt is mid-call and before its stored deadline changes nothing; after the deadline the resolver, not the listener, settles it, and a merchant that has not answered yields `UNKNOWN`, not `FAILED`. The boundary race: the listener commits its outcome just after the deadline while the resolver runs; exactly one transition wins, the credential is used at most once, and no money is released while the merchant may still complete.
+- The credential the harness holds for a chat session is refused by every cardholder and console endpoint (ADR-0009 B1).
 - A completion timeout followed by a matching authorisation: `COMPLETED`, and the reservation counted. A completion timeout with no authorisation until the window ends: `FAILED`, reservation and pre-approval released.
 - Two distinct authorisations against one pre-approval: only the first matches. The same authorisation id twice: the same answer.
 - The same `purchaseKey` delivered twice concurrently: one decision, the same answer twice, one proposal row.

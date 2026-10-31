@@ -111,7 +111,9 @@ The trusted backend talks to merchants (checkout sessions, product records, offe
 | E-mail or web-push sender credentials (`Notifier` adapter) | control-backend (`notifications`) |
 | Merchant account-link tokens (one per cardholder and connector), encrypted under a key per link wrapped by the cardholder's key; never in an event | control-backend (`payments`) |
 | Connector OAuth client credentials (one per admitted connector) | control-backend (`payments`) |
-| The connector gateway's client certificate towards the backend | connector-gateway |
+| The deployment's private CA key for the certificates between our processes ([ADR-0009](../adr/ADR-0009-tech-stack-revision.md)) | the one-shot certificate job (PoC) or the bank's PKI; never a running process |
+| The deployment key-encryption key that wraps the cardholder keys (ADR-0009) | a file mounted into control-backend (PoC); otherwise the deployment's key service or HSM, where wrap and unwrap happen, never in the backend's memory |
+| Each process's own mutual-TLS leaf key (harness, control-mcp, connector-gateway including its client certificate towards the backend, control-backend; ADR-0009) | only that process (two keys in one while the gateway is co-located in `control-mcp`); the hook responder has none between our processes, its processor-facing scheme is per profile |
 
 Never in a repository; only the names of the settings that hold them.
 

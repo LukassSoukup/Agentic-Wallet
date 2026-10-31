@@ -1,6 +1,6 @@
 # Idioms
 
-Write each language the way its own experienced developers do, not another language's style translated into it. Where an idiom conflicts with a domain invariant (JS `number` for money, say), the invariant wins. Where the surrounding code already has a settled convention, match it. Stack per [ADR-0001](../../../../docs/adr/ADR-0001-tech-stack.md) until T-004 revises it.
+Write each language the way its own experienced developers do, not another language's style translated into it. Where an idiom conflicts with a domain invariant (JS `number` for money, say), the invariant wins. Where the surrounding code already has a settled convention, match it. Stack per [ADR-0009](../../../../docs/adr/ADR-0009-tech-stack-revision.md).
 
 Sources: Bloch, *Effective Java* (3rd ed.); the Java Language Specification and JEPs; the TypeScript Handbook and typescript-eslint's `strict-type-checked` config (type-aware rules such as `no-floating-promises` are not in plain `recommended`); the PostgreSQL manual; PEP 8 and PEP 20.
 
