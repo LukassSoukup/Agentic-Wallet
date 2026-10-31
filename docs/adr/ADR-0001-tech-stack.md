@@ -1,12 +1,12 @@
 ---
 id: ADR-0001
-status: accepted
+status: superseded by ADR-0009
 date: 2026-10-17
 tasks: []
 ---
 # ADR-0001: Tech stack: Java 25, Spring Boot 4, PostgreSQL with plain SQL, React + TypeScript UI
 
-> **Re-opened 2026-10-23:** decided for a 26-hour hackathon. To be superseded by the stack ADR of T-004 (persistence re-decided, Hibernate/JPA now allowed; one LLM provider; no x402 wallet side; quality tooling). Until then its decisions stand as written.
+> **Superseded on 2026-10-31 by [ADR-0009](ADR-0009-tech-stack-revision.md)** (T-004): decided for a 26-hour hackathon; the module layout had already been superseded by [ADR-0006](ADR-0006-architecture-style-and-module-cut.md). Re-opened 2026-10-23 for that purpose. The text below is kept as written.
 
 ## Context
 The brief prefers Java (Spring Boot), Hibernate/JPA and PostgreSQL. It requires:
