@@ -28,7 +28,7 @@ jobs:
           java-version: "25"
           cache: maven
           cache-dependency-path: spikes/toolchain/**/pom.xml
-      # T-008: the Maven reactor lives in the toolchain spike until T-009 moves it to the repository root.
+      # T-008: the Maven reactor lives in the toolchain spike until T-009 rebuilds it at the repository root with the spike as its reference.
       # ./mvnw verify runs formatting, static analysis with warnings as errors, unit, property, architecture,
       # Testcontainers and MCP tests, coverage and mutation on control-core, the web build, npm audit and the vulnerability check.
       # setup-java's Maven cache also keeps the NVD data (~/.m2/repository/org/owasp/dependency-check-data).

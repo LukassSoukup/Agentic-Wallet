@@ -8,12 +8,12 @@ import dev.agenticwallet.spike.core.decisioning.ReasonCode;
 import dev.agenticwallet.spike.core.decisioning.Verdict;
 import dev.agenticwallet.spike.kernel.Money;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceException;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,9 +42,9 @@ class JpaDecisionStore implements DecisionStore {
         try {
             entityManager.persist(toEntity(record));
             entityManager.flush();
-        } catch (PersistenceException raced) {
-            // two appends of the same id in flight at once: the unique key decides, and the loser
-            // sees the constraint violation here
+        } catch (ConstraintViolationException raced) {
+            // two appends of the same id in flight at once: the unique key decides and the loser
+            // lands here; any other persistence failure propagates as what it is
             throw new DuplicateDecisionException(record.id(), raced);
         }
     }

@@ -101,6 +101,13 @@
         <groupId>org.jetbrains</groupId>
         <artifactId>jetCheck</artifactId>
         <version>${jetcheck.version}</version>
+        <exclusions>
+          <exclusion>
+            <!-- jetCheck declares JUnit 4; the spike runs on JUnit 6 and needs none of it. -->
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>dev.agenticwallet.spike</groupId>

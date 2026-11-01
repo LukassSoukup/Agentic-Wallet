@@ -35,10 +35,6 @@ mkdir -p measurements
   echo '```'
 } > "$OUT"
 
-docker compose up -d --wait postgres
-docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' | grep postgres | sed 's/^/postgres container: /' >> "$OUT" || true
-free -h >> "$OUT"; echo '```' >> "$OUT"
-
 declare -a PIDS=()
 # Leaves nothing behind: every JVM is stopped and the compose PostgreSQL with its volume removed, also on failure.
 cleanup() {
@@ -47,6 +43,11 @@ cleanup() {
   docker compose down -v --remove-orphans >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
+
+docker compose up -d --wait postgres
+docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' | grep postgres | sed 's/^/postgres container: /' >> "$OUT" || true
+free -h >> "$OUT"; echo '```' >> "$OUT"
+
 
 {
   echo

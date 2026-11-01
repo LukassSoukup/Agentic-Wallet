@@ -8,5 +8,4 @@ web/coverage/
 *.pem
 *.key
 measurements/*.log
-.jqwik-database
 *.tsbuildinfo

@@ -40,8 +40,8 @@ class AgentConfigurationTool {
                 Map.of(
                         "allowedModels",
                         List.of("synthetic/model-a", "synthetic/model-b"),
-                        "spendCapMinorUnits",
-                        50_00,
+                        "spendCap",
+                        Map.of("amount", "50.00", "currency", "EUR"),
                         "clientAdvertisedRoots",
                         capabilities.roots() != null,
                         "clientAdvertisedSampling",

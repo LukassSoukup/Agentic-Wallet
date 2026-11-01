@@ -80,7 +80,8 @@ class McpStreamableHttpTest {
                                 .build());
 
         assertThat(result.isError()).isNotEqualTo(true);
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings(
+                "unchecked") // structuredContent() is Object; the tool returns a JSON object
         Map<String, Object> body = (Map<String, Object>) result.structuredContent();
         assertThat(body)
                 .containsEntry("clientAdvertisedRoots", false)

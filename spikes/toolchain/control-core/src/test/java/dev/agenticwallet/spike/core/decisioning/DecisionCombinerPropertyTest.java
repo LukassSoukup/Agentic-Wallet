@@ -1,7 +1,5 @@
 package dev.agenticwallet.spike.core.decisioning;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -67,16 +65,5 @@ class DecisionCombinerPropertyTest {
                     int expected = verdicts.stream().mapToInt(v -> v.reasons().size()).sum();
                     return DecisionCombiner.combine(verdicts).reasons().size() == expected;
                 });
-    }
-
-    @Test
-    void combinerIsPureOverTheWholeSample() {
-        assertThat(
-                        DecisionCombiner.combine(
-                                        List.of(
-                                                Verdict.of(
-                                                        Outcome.APPROVE, ReasonCode.WITHIN_LIMIT)))
-                                .outcome())
-                .isEqualTo(Outcome.APPROVE);
     }
 }

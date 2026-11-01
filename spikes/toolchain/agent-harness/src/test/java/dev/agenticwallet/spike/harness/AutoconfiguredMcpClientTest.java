@@ -82,7 +82,8 @@ class AutoconfiguredMcpClientTest {
                 client.callTool(
                         McpSchema.CallToolRequest.builder(TOOL).arguments(Map.of()).build());
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings(
+                "unchecked") // structuredContent() is Object; the tool returns a JSON object
         Map<String, Object> seen = (Map<String, Object>) result.structuredContent();
         assertThat(seen)
                 .containsEntry("roots", false)

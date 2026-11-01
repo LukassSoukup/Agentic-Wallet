@@ -5,7 +5,6 @@ import static org.awaitility.Awaitility.await;
 
 import dev.agenticwallet.spike.backend.support.TestPostgres;
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -123,10 +122,10 @@ class FailedPublicationResubmissionTest {
 
         // What the registry records once the hung listener finally returns is part of the finding.
         await().atMost(Duration.ofSeconds(12)).until(() -> listeners.hangReturns() == 1);
-        String finalStatus = statusOf(id);
-        assertThat(List.of("FAILED", "COMPLETED")).contains(finalStatus);
-        System.out.println(
-                "T-008 finding: hung listener's publication after return = " + finalStatus);
+        // Characterises Spring Modulith 2.1.2: the late return overwrites the monitor's FAILED with
+        // COMPLETED. The monitor bounds a hang; it does not fence it. B6's compare-and-set on the
+        // attempt is the fence. If an upgrade changes this, the finding in the report changes too.
+        assertThat(statusOf(id)).isEqualTo("COMPLETED");
     }
 
     private String statusOf(UUID id) {
