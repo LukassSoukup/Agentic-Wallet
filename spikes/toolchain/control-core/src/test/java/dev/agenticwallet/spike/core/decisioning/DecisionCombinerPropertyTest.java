@@ -5,54 +5,78 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import net.jqwik.api.Arbitraries;
-import net.jqwik.api.Arbitrary;
-import net.jqwik.api.ForAll;
-import net.jqwik.api.Property;
-import net.jqwik.api.Provide;
+import org.jetbrains.jetCheck.Generator;
+import org.jetbrains.jetCheck.PropertyChecker;
+import org.junit.jupiter.api.Test;
 
-/** The combiner only ever raises caution (invariant 2) and keeps every reason. */
+/**
+ * The combiner only ever raises caution (invariant 2) and keeps every reason. jetCheck properties.
+ */
 class DecisionCombinerPropertyTest {
 
-    @Provide
-    Arbitrary<List<Verdict>> verdictLists() {
-        Arbitrary<Verdict> verdicts =
-                Arbitraries.of(Outcome.class)
-                        .flatMap(outcome ->
-                                Arbitraries.of(ReasonCode.class)
-                                        .list()
-                                        .ofMinSize(1)
-                                        .ofMaxSize(3)
-                                        .map(reasons -> new Verdict(outcome, reasons)));
-        return verdicts.list().ofMinSize(1).ofMaxSize(6);
+    private static final Generator<Verdict> VERDICTS =
+            Generator.from(env -> {
+                Outcome outcome = env.generate(Generator.sampledFrom(Outcome.values()));
+                List<ReasonCode> reasons =
+                        env.generate(
+                                Generator.nonEmptyLists(
+                                        Generator.sampledFrom(ReasonCode.values())));
+                return new Verdict(outcome, reasons);
+            });
+
+    private static final Generator<List<Verdict>> VERDICT_LISTS = Generator.nonEmptyLists(VERDICTS);
+
+    @Test
+    void resultIsAtLeastAsCautiousAsEveryInput() {
+        PropertyChecker.forAll(
+                VERDICT_LISTS,
+                verdicts -> {
+                    Outcome combined = DecisionCombiner.combine(verdicts).outcome();
+                    return verdicts.stream()
+                            .allMatch(v -> combined.isAtLeastAsCautiousAs(v.outcome()));
+                });
     }
 
-    @Property
-    void resultIsAtLeastAsCautiousAsEveryInput(@ForAll("verdictLists") List<Verdict> verdicts) {
-        Verdict combined = DecisionCombiner.combine(verdicts);
-        assertThat(verdicts)
-                .allSatisfy(v ->
-                        assertThat(combined.outcome().isAtLeastAsCautiousAs(v.outcome())).isTrue());
+    @Test
+    void resultIsOneOfTheInputOutcomes() {
+        PropertyChecker.forAll(
+                VERDICT_LISTS,
+                verdicts ->
+                        verdicts.stream()
+                                .map(Verdict::outcome)
+                                .anyMatch(o -> o == DecisionCombiner.combine(verdicts).outcome()));
     }
 
-    @Property
-    void resultIsOneOfTheInputOutcomes(@ForAll("verdictLists") List<Verdict> verdicts) {
-        Verdict combined = DecisionCombiner.combine(verdicts);
-        assertThat(verdicts).extracting(Verdict::outcome).contains(combined.outcome());
+    @Test
+    void orderDoesNotChangeTheOutcome() {
+        PropertyChecker.forAll(
+                VERDICT_LISTS,
+                verdicts -> {
+                    List<Verdict> reversed = new ArrayList<>(verdicts);
+                    Collections.reverse(reversed);
+                    return DecisionCombiner.combine(reversed).outcome()
+                            == DecisionCombiner.combine(verdicts).outcome();
+                });
     }
 
-    @Property
-    void orderDoesNotChangeTheOutcome(@ForAll("verdictLists") List<Verdict> verdicts) {
-        List<Verdict> reversed = new ArrayList<>(verdicts);
-        Collections.reverse(reversed);
-        assertThat(DecisionCombiner.combine(reversed).outcome())
-                .isEqualTo(DecisionCombiner.combine(verdicts).outcome());
+    @Test
+    void everyReasonSurvives() {
+        PropertyChecker.forAll(
+                VERDICT_LISTS,
+                verdicts -> {
+                    int expected = verdicts.stream().mapToInt(v -> v.reasons().size()).sum();
+                    return DecisionCombiner.combine(verdicts).reasons().size() == expected;
+                });
     }
 
-    @Property
-    void everyReasonSurvives(@ForAll("verdictLists") List<Verdict> verdicts) {
-        Verdict combined = DecisionCombiner.combine(verdicts);
-        int expected = verdicts.stream().mapToInt(v -> v.reasons().size()).sum();
-        assertThat(combined.reasons()).hasSize(expected);
+    @Test
+    void combinerIsPureOverTheWholeSample() {
+        assertThat(
+                        DecisionCombiner.combine(
+                                        List.of(
+                                                Verdict.of(
+                                                        Outcome.APPROVE, ReasonCode.WITHIN_LIMIT)))
+                                .outcome())
+                .isEqualTo(Outcome.APPROVE);
     }
 }

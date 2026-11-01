@@ -40,7 +40,12 @@ docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' | grep postgres | se
 free -h >> "$OUT"; echo '```' >> "$OUT"
 
 declare -a PIDS=()
-cleanup() { for p in "${PIDS[@]:-}"; do kill "$p" 2>/dev/null || true; done; wait 2>/dev/null || true; }
+# Leaves nothing behind: every JVM is stopped and the compose PostgreSQL with its volume removed, also on failure.
+cleanup() {
+  for p in "${PIDS[@]:-}"; do kill "$p" 2>/dev/null || true; done
+  wait 2>/dev/null || true
+  docker compose down -v --remove-orphans >/dev/null 2>&1 || true
+}
 trap cleanup EXIT
 
 {

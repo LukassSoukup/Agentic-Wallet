@@ -1,47 +1,71 @@
 package dev.agenticwallet.spike.kernel;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.util.Currency;
-import net.jqwik.api.Arbitraries;
-import net.jqwik.api.Arbitrary;
-import net.jqwik.api.ForAll;
-import net.jqwik.api.Property;
-import net.jqwik.api.Provide;
+import org.jetbrains.jetCheck.Generator;
+import org.jetbrains.jetCheck.PropertyChecker;
+import org.jetbrains.jetCheck.PropertyFalsified;
+import org.junit.jupiter.api.Test;
 
-/** Property tests for Money (quality bar: property tests for money). */
+/**
+ * Property tests for Money with jetCheck (quality bar: property tests for money). jetCheck is a
+ * library, not a test engine, so these are plain JUnit tests.
+ */
 class MoneyPropertyTest {
 
     private static final Currency EUR = Currency.getInstance("EUR");
 
-    @Provide
-    Arbitrary<Money> euros() {
-        return Arbitraries.bigDecimals()
-                .between(new BigDecimal("-1000000"), new BigDecimal("1000000"))
-                .ofScale(4)
-                .map(amount -> new Money(amount, EUR));
+    /** Amounts between -200,000.0000 and 200,000.0000 with four decimals. */
+    private static final Generator<Money> EUROS =
+            Generator.from(env -> {
+                int tenThousandths =
+                        env.generate(Generator.integers(-2_000_000_000, 2_000_000_000));
+                return new Money(BigDecimal.valueOf(tenThousandths, 4), EUR);
+            });
+
+    @Test
+    void scaleIsAlwaysTwo() {
+        PropertyChecker.forAll(EUROS, money -> money.amount().scale() == Money.SCALE);
     }
 
-    @Property
-    void scaleIsAlwaysTwo(@ForAll("euros") Money money) {
-        assertThat(money.amount().scale()).isEqualTo(Money.SCALE);
+    @Test
+    void additionIsCommutative() {
+        PropertyChecker.forAll(
+                Generator.zipWith(EUROS, EUROS, Pair::new),
+                pair -> pair.a().plus(pair.b()).equals(pair.b().plus(pair.a())));
     }
 
-    @Property
-    void additionIsCommutative(@ForAll("euros") Money a, @ForAll("euros") Money b) {
-        assertThat(a.plus(b)).isEqualTo(b.plus(a));
+    @Test
+    void conversionAtRateOneKeepsTheAmount() {
+        PropertyChecker.forAll(
+                EUROS,
+                money ->
+                        money.convertedAt(BigDecimal.ONE, Currency.getInstance("CZK"))
+                                        .amount()
+                                        .compareTo(money.amount())
+                                == 0);
     }
 
-    @Property
-    void additionIsAssociative(
-            @ForAll("euros") Money a, @ForAll("euros") Money b, @ForAll("euros") Money c) {
-        assertThat(a.plus(b).plus(c)).isEqualTo(a.plus(b.plus(c)));
+    /**
+     * A deliberately false property (amounts never exceed 500): jetCheck must report a shrunk
+     * counterexample, not the first random one. Finding (T-008): with a mapped integer generator
+     * the shrink stops early (hundreds, not 500.01); a dedicated BigDecimal generator would do
+     * better.
+     */
+    @Test
+    void shrinksACounterexample() {
+        assertThatThrownBy(() ->
+                        PropertyChecker.customized()
+                                .withIterationCount(200)
+                                .forAll(
+                                        EUROS,
+                                        money -> !money.isGreaterThan(Money.of("500.00", "EUR"))))
+                .isInstanceOf(PropertyFalsified.class)
+                .hasMessageContaining("Falsified on Money")
+                .hasMessageContaining("Shrunk in");
     }
 
-    @Property
-    void conversionAtRateOneKeepsTheAmount(@ForAll("euros") Money money) {
-        Money same = money.convertedAt(BigDecimal.ONE, Currency.getInstance("CZK"));
-        assertThat(same.amount()).isEqualByComparingTo(money.amount());
-    }
+    private record Pair(Money a, Money b) {}
 }

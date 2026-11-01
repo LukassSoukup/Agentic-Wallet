@@ -23,12 +23,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>net.jqwik</groupId>
-      <artifactId>jqwik</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <!-- Fallback candidate for property tests (T-008): JetBrains jetCheck, Apache 2.0, with shrinking. -->
       <groupId>org.jetbrains</groupId>
       <artifactId>jetCheck</artifactId>
       <scope>test</scope>

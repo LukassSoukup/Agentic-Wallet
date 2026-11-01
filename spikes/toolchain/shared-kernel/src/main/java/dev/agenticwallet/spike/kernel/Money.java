@@ -7,7 +7,8 @@ import java.util.Currency;
 /**
  * An exact amount in one currency, scale 2, half-even (invariant 6).
  *
- * <p>Spike version: enough to prove jqwik and the toolchain on Java 25; T-003 owns the real type.
+ * <p>Spike version: enough to prove jetCheck and the toolchain on Java 25; T-003 owns the real
+ * type.
  */
 public record Money(BigDecimal amount, Currency currency) {
 

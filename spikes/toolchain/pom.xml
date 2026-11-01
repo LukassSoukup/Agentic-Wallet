@@ -37,7 +37,6 @@
     <spring-modulith.version>2.1.2</spring-modulith.version>
 
     <!-- Test libraries Boot's BOM does not manage. -->
-    <jqwik.version>1.10.2</jqwik.version>
     <archunit.version>1.5.1</archunit.version>
     <jetcheck.version>0.3.0</jetcheck.version>
 
@@ -92,11 +91,6 @@
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>3.0.6</version>
-      </dependency>
-      <dependency>
-        <groupId>net.jqwik</groupId>
-        <artifactId>jqwik</artifactId>
-        <version>${jqwik.version}</version>
       </dependency>
       <dependency>
         <groupId>com.tngtech.archunit</groupId>
