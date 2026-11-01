@@ -21,7 +21,7 @@ Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BR
 Quality first, no rapid development.
 - No choice is justified by a deadline, a demo or speed. Trading quality for speed needs the user's explicit decision.
 - Done means tested: a test per rule with its edges (at the limit, one cent over, foreign currency, duplicate delivery, injected text, pending step-up); property tests for money and the decision combiner; a Testcontainers test per DB adapter; one shared contract suite per port with more than one adapter.
-- The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core`, set by the user on 2026-11-01 (T-008): line 85 %, branch 90 %, line per class 80 %, mutation score 85 %.
+- The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core`, set by the user on 2026-11-01 (T-008): line 85 %, branch 90 %, line per class 80 %, mutation score 85 %. Code under `spikes/` is exempt from the floors; everything that reaches `src/` is not.
 - No `TODO`/`FIXME` without an issue; no unexplained suppressions; named errors, no swallowed exceptions.
 - Every public port in `core` has a contract comment: inputs, failure modes, idempotency.
 - Dependencies pinned and checked for known vulnerabilities. Simulated/synthetic data is always labelled. Generated code (e.g. Claude Design output) is a reference, rebuilt to this bar.
