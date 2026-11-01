@@ -53,10 +53,12 @@
     <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
     <node.version>v26.13.0</node.version>
 
-    <!-- Floors on control-core. Placeholders: the user sets the real values (T-008 proposes them in the PR). -->
-    <control-core.coverage.line.floor>0.00</control-core.coverage.line.floor>
-    <control-core.coverage.branch.floor>0.00</control-core.coverage.branch.floor>
-    <control-core.mutation.floor>0</control-core.mutation.floor>
+    <!-- Floors on control-core, set by the user on 2026-11-01 (T-008): line 85 %, branch 90 %,
+         line per class 80 %, mutation score 85 %. -->
+    <control-core.coverage.line.floor>0.85</control-core.coverage.line.floor>
+    <control-core.coverage.branch.floor>0.90</control-core.coverage.branch.floor>
+    <control-core.coverage.class-line.floor>0.80</control-core.coverage.class-line.floor>
+    <control-core.mutation.floor>85</control-core.mutation.floor>
 
     <!-- Memory caps for every JVM a build forks; the Pi is also the home server. -->
     <surefire.argLine>-Xmx512m -XX:+UseSerialGC -XX:TieredStopAtLevel=1</surefire.argLine>

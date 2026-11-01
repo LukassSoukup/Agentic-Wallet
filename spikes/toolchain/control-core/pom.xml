@@ -95,6 +95,16 @@
                     </limit>
                   </limits>
                 </rule>
+                <rule>
+                  <element>CLASS</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${control-core.coverage.class-line.floor}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
               </rules>
             </configuration>
           </execution>
