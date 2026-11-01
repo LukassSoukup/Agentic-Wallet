@@ -1,7 +1,7 @@
 package dev.agenticwallet.spike.core.decisioning;
 
+import dev.agenticwallet.spike.kernel.ids.DecisionId;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Port: the append-only store of decisions.
@@ -14,5 +14,5 @@ import java.util.UUID;
 public interface DecisionStore {
     void append(DecisionRecord record);
 
-    Optional<DecisionRecord> find(UUID id);
+    Optional<DecisionRecord> find(DecisionId id);
 }
