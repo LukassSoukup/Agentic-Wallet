@@ -11,7 +11,7 @@ Report of the toolchain spike in [`spikes/toolchain/`](../../spikes/toolchain/) 
 | (c) JUnit 6 with jqwik, ArchUnit, Mockito, Testcontainers, Modulith test support | **confirmed technically; jqwik is a gap on other grounds** | [Test libraries](#c-test-libraries-on-junit-6) |
 | (d) Flyway and Hibernate `validate` against PostgreSQL 18 in Testcontainers on aarch64 | **confirmed** | [Database](#d-flyway-hibernate-validate-and-postgresql-18) |
 | (e) Structured logging, Micrometer Tracing with the OpenTelemetry bridge and a span link at the boundary, SSL bundles with reload, Apache HttpClient 5 behind `RestClient` and under the MCP transport, Modulith republish-on-restart and staleness monitor | **confirmed, with one gap** (the MCP client transport is JDK `HttpClient` only) | [Conventions](#e-logging-tracing-ssl-bundles-http-clients-and-the-outbox) |
-| (f) SonarQube Cloud PR analysis on the free plan; formatter; static analysis with warnings as errors; coverage and mutation; vulnerability check; proposed floors | **confirmed** (the plan is now called OSS) | [Quality tooling](#f-quality-tooling) and [SonarQube Cloud](#sonarqube-cloud-what-the-user-does) |
+| (f) SonarQube Cloud PR analysis on the free plan; formatter; static analysis with warnings as errors; coverage and mutation; vulnerability check; proposed floors | **confirmed** (the repository is already connected; this PR was analysed; the free-for-open-source plan is now called OSS) | [Quality tooling](#f-quality-tooling) and [SonarQube Cloud](#sonarqube-cloud-what-the-user-does) |
 | (g) Spring context start time per deployable | **measured** | [JVM start time and memory](#g-context-start-time-and-memory-per-jvm) |
 | (h) Node LTS and the web toolchain | **confirmed** | [Web](#h-node-lts-and-the-web-toolchain) |
 
@@ -152,18 +152,13 @@ Node 26.13.0 is the current Active LTS (since 2026-10-28). The frontend Maven pl
 
 ## SonarQube Cloud: what the user does
 
-Researched on 2026-11-01 from Sonar's documentation. Sonar reorganised its plans in January 2026: **Free** (unlimited public projects, private up to 50k LoC, five members, main branch plus pull requests that target it, no custom quality gates), **Team**, **Enterprise**, and **OSS** (the former free-for-open-source plan: unlimited public repositories, unlimited branch and pull-request analysis, custom quality profiles and gates). Pull-request analysis with the quality gate as a GitHub check and inline annotations works on both Free and OSS for this repository, since every pull request targets `main`. OSS is the better fit because it allows a custom quality gate.
+**Already connected.** While this PR was open, a `SonarCloud Code Analysis` check appeared on it and passed: the repository is bound to SonarQube Cloud organization `lukasssoukup`, project `LukassSoukup_Agentic-Wallet` (public), with **Automatic Analysis on** (`sonar.autoscan.enabled=true`). The pull request was analysed within a minute of opening (1 506 lines of the spike's Java), the quality gate is the default "Sonar way" on new code (reliability, security, maintainability, duplication, hotspots reviewed) and it passed. So checklist item (f)'s question, whether the free offering analyses pull requests, is answered by this very PR.
 
-Steps, all needing the user's GitHub account:
-1. Add a licence file to the repository if the OSS plan is wanted (eligibility is "publicly available under an open-source licence").
-2. Go to sonarcloud.io, **Start now**, log in with GitHub, and install the **SonarQube Cloud GitHub App** on the `LukassSoukup` account with access to `Agentic-Wallet`.
-3. On **Create an organization**, use the link **Get SonarQube for OSS** (not a plan button) and bind the organization to the GitHub account; note the organization key.
-4. Import the project; note the project key.
-5. In the project, **Administration → Analysis Method**: turn **Automatic Analysis off**. It does support Maven and Java now, but it does not take JaCoCo coverage from our build, cannot run beside CI analysis, and would make CI-based analysis fail.
-6. **My Account → Security**: create a personal access token (Free and OSS have no project-scoped tokens) and store it as the repository secret `SONAR_TOKEN`.
-7. In the CI workflow, after `./mvnw verify`, run `./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar -Dsonar.organization=<org key> -Dsonar.projectKey=<project key>` with `SONAR_TOKEN` in the environment; JaCoCo's XML reports are found at their default path, and for the multi-module reactor the parent sets `sonar.coverage.jacoco.xmlReportPaths` to every module's `target/site/jacoco/jacoco.xml`. No `GITHUB_TOKEN` is needed for decoration; the GitHub App does it.
-8. After the first successful analysis of a pull request, add the check **SonarCloud Code Analysis** (confirm the exact name on that PR) to the branch protection of `main`.
-9. Pull requests from forks have no secrets; Sonar's documented answer is a `workflow_run` follow-up workflow. This repository takes no fork pull requests today, so this is deferred.
+What is still the user's:
+1. **Plan:** Sonar reorganised its plans in January 2026: **Free** (unlimited public projects, private up to 50k LoC, five members, the main branch plus pull requests that target it, no custom quality gates) and **OSS** (the former free-for-open-source plan: unlimited branches and pull requests, custom quality profiles and gates). Check which one the organization is on under **Administration → Billing**; for custom gates (coverage floors on new code) it must be OSS, which needs a licence file in the repository and the **Get SonarQube for OSS** link on the organization page.
+2. **Coverage in Sonar:** Automatic Analysis does not import JaCoCo reports, which is why the gate has no coverage condition today. To get coverage and a coverage floor on new code: **Administration → Analysis Method**, turn **Automatic Analysis off**; **My Account → Security**, create a token (Free and OSS have no project-scoped tokens) and store it as the repository secret `SONAR_TOKEN`; then add to the CI job, after `./mvnw verify`, `./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar -Dsonar.organization=lukasssoukup -Dsonar.projectKey=LukassSoukup_Agentic-Wallet` with `SONAR_TOKEN` in the environment (JaCoCo's XML reports are picked up from each module's `target/site/jacoco/jacoco.xml`; no `GITHUB_TOKEN` is needed, the GitHub App decorates). Until then the current automatic analysis is a reasonable default.
+3. **Required check:** add `SonarCloud Code Analysis` to the `main` ruleset's required status checks (it already appears in the picker, since it has run on this PR).
+4. Pull requests from forks have no secrets; Sonar's documented answer is a `workflow_run` follow-up workflow. This repository takes no fork pull requests today, so this is deferred.
 
 Java 25 is supported by the Cloud analyser ("LTS 8, 11, 17, 21, 25 and all intermediary versions"); JaCoCo 0.8.16 writes class files it reads.
 
@@ -177,7 +172,7 @@ Self-hosted fallback, only if the Cloud plan stops covering the repository, depl
 
 1. **Floors**: set `control-core.coverage.line.floor`, `control-core.coverage.branch.floor` and `control-core.mutation.floor` (proposal above) when T-009 creates the real reactor.
 2. **jqwik**: decide between jetCheck and jqwik and amend ADR-0009 accordingly.
-3. **SonarQube Cloud**: the sign-in, GitHub App, OSS plan, token and `SONAR_TOKEN` secret (steps above).
+3. **SonarQube Cloud**: already connected with Automatic Analysis; decide on the OSS plan and the switch to CI-based analysis with coverage (steps above), and add the check to the `main` ruleset.
 4. **`NVD_API_KEY`**: request a free key at nvd.nist.gov and store it as a repository secret; without it the vulnerability database download is throttled.
 5. **`OPENROUTER_API_KEY`** in a gitignored `.env` at `spikes/toolchain/.env` (copy `.env.example`) to run the live hello; the spike's `ChatHelloLiveTest` runs only when the variable is set.
 6. **Dotfiles**: make `java` and `node` visible to non-interactive shells (section (a)).
