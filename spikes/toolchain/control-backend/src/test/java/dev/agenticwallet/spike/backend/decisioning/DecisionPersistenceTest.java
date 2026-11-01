@@ -1,10 +1,12 @@
 package dev.agenticwallet.spike.backend.decisioning;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.agenticwallet.spike.backend.support.TestPostgres;
 import dev.agenticwallet.spike.core.decisioning.DecisionRecord;
 import dev.agenticwallet.spike.core.decisioning.DecisionStore;
+import dev.agenticwallet.spike.core.decisioning.DuplicateDecisionException;
 import dev.agenticwallet.spike.core.decisioning.Outcome;
 import dev.agenticwallet.spike.core.decisioning.ReasonCode;
 import dev.agenticwallet.spike.core.decisioning.Verdict;
@@ -71,5 +73,28 @@ class DecisionPersistenceTest {
         store.append(record);
 
         assertThat(store.find(id)).contains(record);
+    }
+
+    @Test
+    void refusesToAppendTheSameIdTwiceAndKeepsTheFirstRecord() {
+        UUID id = UUID.randomUUID();
+        DecisionRecord first =
+                new DecisionRecord(
+                        id,
+                        Instant.parse("2026-11-01T10:15:30Z"),
+                        Money.of("10.00", "EUR"),
+                        new Verdict(Outcome.APPROVE, List.of(ReasonCode.WITHIN_LIMIT)));
+        DecisionRecord second =
+                new DecisionRecord(
+                        id,
+                        Instant.parse("2026-11-01T10:16:00Z"),
+                        Money.of("999.00", "EUR"),
+                        new Verdict(Outcome.DECLINE, List.of(ReasonCode.OVER_LIMIT)));
+        store.append(first);
+
+        assertThatThrownBy(() -> store.append(second))
+                .isInstanceOf(DuplicateDecisionException.class);
+
+        assertThat(store.find(id)).contains(first);
     }
 }

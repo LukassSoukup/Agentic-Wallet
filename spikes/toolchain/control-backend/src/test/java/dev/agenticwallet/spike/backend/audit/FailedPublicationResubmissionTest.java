@@ -17,9 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.modulith.events.ApplicationModuleListener;
-import org.springframework.modulith.events.EventPublication;
 import org.springframework.modulith.events.FailedEventPublications;
-import org.springframework.modulith.events.IncompleteEventPublications;
 import org.springframework.modulith.events.ResubmissionOptions;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -92,7 +90,6 @@ class FailedPublicationResubmissionTest {
     @Autowired TransactionTemplate tx;
     @Autowired JdbcClient jdbc;
     @Autowired FailedEventPublications failed;
-    @Autowired IncompleteEventPublications incomplete;
     @Autowired SyntheticListeners listeners;
 
     @Test
@@ -146,10 +143,5 @@ class FailedPublicationResubmissionTest {
                 .param("id", "%" + id + "%")
                 .query(Integer.class)
                 .single();
-    }
-
-    @SuppressWarnings("unused") // kept to show the incomplete-publications API resolves too
-    private void resubmitIncomplete() {
-        incomplete.resubmitIncompletePublications((EventPublication p) -> true);
     }
 }

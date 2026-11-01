@@ -158,11 +158,11 @@ class MutualTlsBundleTest {
                         .retrieve()
                         .body(String.class);
 
-        System.out.println(
-                "T-008 finding: client bundle update handler fired; existing RestClient reloaded = "
-                        + !after.equals(before)
-                        + "; a RestClient rebuilt from the bundle presents the new certificate = "
-                        + !rebuilt.equals(before));
+        // Characterisation (T-008 finding): the client built before the swap still presents the old
+        // certificate (the JDK client may also reuse its pooled TLS connection, which this test
+        // does
+        // not separate); a client rebuilt from the bundle presents the new one.
+        assertThat(after).isEqualTo(before);
         assertThat(rebuilt).isNotEqualTo(before);
     }
 

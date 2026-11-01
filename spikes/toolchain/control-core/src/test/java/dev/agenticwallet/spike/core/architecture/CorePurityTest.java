@@ -3,6 +3,8 @@ package dev.agenticwallet.spike.core.architecture;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.tngtech.archunit.core.domain.JavaCall;
+import com.tngtech.archunit.core.domain.properties.HasName;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -56,10 +58,9 @@ class CorePurityTest {
                     .haveFullyQualifiedName("java.nio.charset.Charset")
                     .orShould()
                     .callMethodWhere(
-                            com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
-                                    com.tngtech.archunit.core.domain.properties.HasName.Predicates
-                                            .nameMatching(
-                                                    "now|randomUUID|getenv|getProperty|systemDefault|getDefault|defaultCharset|currentTimeMillis|nanoTime|random")));
+                            JavaCall.Predicates.target(
+                                    HasName.Predicates.nameMatching(
+                                            "now|randomUUID|getenv|getProperty|systemDefault|getDefault|defaultCharset|currentTimeMillis|nanoTime|random")));
 
     /** Module packages of the core may not import each other except through the kernel. */
     @ArchTest

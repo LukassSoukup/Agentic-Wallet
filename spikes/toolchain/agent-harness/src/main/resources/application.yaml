@@ -6,8 +6,7 @@ spring:
     import: optional:file:.env[.properties],optional:file:../.env[.properties]
   ai:
     openai:
-      # Spring AI 2.0.2 keeps only scheme, host and port of this URL (T-008 finding); the path comes back
-      # through agentic.llm-gateway.path-prefix below until Spring AI keeps it itself.
+      # Spring AI 2.0 appends /chat/completions to this URL, so it ends in /v1 (OpenRouter: /api/v1).
       base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
       api-key: ${OPENROUTER_API_KEY:}
       chat:
@@ -24,9 +23,6 @@ spring:
           connections:
             control:
               url: ${CONTROL_MCP_URL:http://localhost:8081}
-agentic:
-  llm-gateway:
-    path-prefix: ${OPENROUTER_PATH_PREFIX:/api/v1}
 server:
   port: ${PORT:8084}
 management:

@@ -1,11 +1,12 @@
 package dev.agenticwallet.spike.kernel;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.util.Currency;
 import org.jetbrains.jetCheck.Generator;
 import org.jetbrains.jetCheck.PropertyChecker;
+import org.jetbrains.jetCheck.PropertyFalsified;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -47,22 +48,22 @@ class MoneyJetCheckPropertyTest {
                                 == 0);
     }
 
+    /**
+     * A deliberately false property (amounts never exceed 500): jetCheck must report a shrunk
+     * counterexample, not the first random one. Finding (T-008): with a mapped integer generator
+     * the shrink stops early (hundreds, not 500.01); jqwik shrinks the same property to 500.01.
+     */
     @Test
-    void shrinksToAMinimalCounterexample() {
-        // A deliberately false property: amounts never exceed 500. jetCheck must report a shrunk
-        // counterexample, not the first random one. Finding (T-008): with a mapped integer
-        // generator
-        // the shrink stops early (hundreds, not 500.01); a dedicated BigDecimal generator would do
-        // better. jqwik shrinks the same property to 500.01.
-        try {
-            PropertyChecker.customized()
-                    .withIterationCount(200)
-                    .forAll(EUROS, money -> !money.isGreaterThan(Money.of("500.00", "EUR")));
-        } catch (org.jetbrains.jetCheck.PropertyFalsified falsified) {
-            assertThat(falsified.getMessage()).contains("Falsified on Money").contains("Shrunk in");
-            return;
-        }
-        throw new AssertionError("the false property was not falsified");
+    void shrinksACounterexample() {
+        assertThatThrownBy(() ->
+                        PropertyChecker.customized()
+                                .withIterationCount(200)
+                                .forAll(
+                                        EUROS,
+                                        money -> !money.isGreaterThan(Money.of("500.00", "EUR"))))
+                .isInstanceOf(PropertyFalsified.class)
+                .hasMessageContaining("Falsified on Money")
+                .hasMessageContaining("Shrunk in");
     }
 
     private record Pair(Money a, Money b) {}

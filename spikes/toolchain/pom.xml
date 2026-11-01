@@ -39,6 +39,7 @@
     <!-- Test libraries Boot's BOM does not manage. -->
     <jqwik.version>1.10.2</jqwik.version>
     <archunit.version>1.5.1</archunit.version>
+    <jetcheck.version>0.3.0</jetcheck.version>
 
     <!-- Quality tooling. -->
     <error-prone.version>2.51.0</error-prone.version>
@@ -101,6 +102,11 @@
         <groupId>com.tngtech.archunit</groupId>
         <artifactId>archunit-junit5</artifactId>
         <version>${archunit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>jetCheck</artifactId>
+        <version>${jetcheck.version}</version>
       </dependency>
       <dependency>
         <groupId>dev.agenticwallet.spike</groupId>
@@ -355,7 +361,7 @@
 
   <profiles>
     <profile>
-      <!-- Skips the NVD download; used while iterating on the Pi. CI runs without it. -->
+      <!-- Skips the NVD download; used while iterating on the Pi, and by CI until the NVD_API_KEY secret exists. -->
       <id>no-vuln-check</id>
       <properties>
         <dependency-check.skip>true</dependency-check.skip>

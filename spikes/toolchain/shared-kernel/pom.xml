@@ -31,7 +31,6 @@
       <!-- Fallback candidate for property tests (T-008): JetBrains jetCheck, Apache 2.0, with shrinking. -->
       <groupId>org.jetbrains</groupId>
       <artifactId>jetCheck</artifactId>
-      <version>0.3.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

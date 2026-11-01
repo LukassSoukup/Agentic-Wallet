@@ -44,11 +44,6 @@ public record Money(BigDecimal amount, Currency currency) {
         return amount.compareTo(other.amount) > 0;
     }
 
-    public boolean isSameAmountAs(Money other) {
-        requireSameCurrency(other);
-        return amount.compareTo(other.amount) == 0;
-    }
-
     private void requireSameCurrency(Money other) {
         if (!currency.equals(other.currency)) {
             throw new CurrencyMismatchException(currency, other.currency);
