@@ -109,10 +109,10 @@ class DemoShopCheckout implements Checkout {
             if (!answered.getStatusCode().is4xxClientError()) {
                 return new CompletionResult.NoAnswer();
             }
-            return new CompletionResult.Refused(
-                    answered.getStatusCode() == HttpStatus.CONFLICT
-                            ? "session-already-completed"
-                            : "merchant-refused-completion");
+            if (answered.getStatusCode() == HttpStatus.CONFLICT) {
+                return new CompletionResult.AlreadyCompleted();
+            }
+            return new CompletionResult.Refused("merchant-refused-completion");
         } catch (RestClientException noAnswer) {
             return new CompletionResult.NoAnswer();
         }

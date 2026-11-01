@@ -19,8 +19,9 @@ import org.springframework.web.client.RestClient;
 
 /**
  * The adapter translates every failure into the port's modes (ADR-0009 B3, B6): a merchant that
- * answers after the read timeout is {@code NoAnswer} (UNKNOWN, never FAILED), a 4xx is refused with
- * a code, a 5xx is {@code NoAnswer}, and an unknown session is {@code NotFound}.
+ * answers after the read timeout is {@code NoAnswer} (UNKNOWN, never FAILED), a 409 is {@code
+ * AlreadyCompleted}, another 4xx is refused with a code, a 5xx is {@code NoAnswer}, and an unknown
+ * session is {@code NotFound}.
  */
 class DemoShopCheckoutTest {
 
@@ -78,7 +79,7 @@ class DemoShopCheckoutTest {
     @Test
     void translatesRefusalsServerErrorsAndUnknownSessions() {
         assertThat(checkout.complete("taken", new Credential("syn"), "key"))
-                .isEqualTo(new Checkout.CompletionResult.Refused("session-already-completed"));
+                .isInstanceOf(Checkout.CompletionResult.AlreadyCompleted.class);
         assertThat(checkout.complete("broken", new Credential("syn"), "key"))
                 .isInstanceOf(Checkout.CompletionResult.NoAnswer.class);
         assertThat(checkout.status("gone")).isInstanceOf(Checkout.SessionStatus.NotFound.class);

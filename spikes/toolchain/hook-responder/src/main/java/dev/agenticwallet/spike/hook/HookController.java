@@ -5,6 +5,7 @@ import dev.agenticwallet.spike.kernel.Money;
 import dev.agenticwallet.spike.kernel.ids.DecisionId;
 import dev.agenticwallet.spike.kernel.ids.InvalidIdFormatException;
 import dev.agenticwallet.spike.kernel.ids.MerchantReference;
+import dev.agenticwallet.spike.kernel.ids.ProcessorAuthorisationId;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Instant;
@@ -47,7 +48,7 @@ class HookController {
     HookAnswerView authorise(@RequestBody HookRequest request) {
         Authorisation authorisation =
                 new Authorisation(
-                        requireIdFormat(request.processorAuthorisationId()),
+                        ProcessorAuthorisationId.parse(request.processorAuthorisationId()).value(),
                         new Money(request.amount(), Currency.getInstance(request.currency())),
                         MerchantReference.parse(request.merchantReference()),
                         request.occurredAt());
@@ -59,16 +60,21 @@ class HookController {
                 answer.mode().name());
     }
 
+    /** A missing amount, currency or time is refused at the edge as a problem, never a 500. */
+    @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
+    ResponseEntity<ProblemDetail> malformed(RuntimeException malformed) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST, "The authorisation is not well formed.");
+        problem.setType(URI.create("urn:agentic-wallet:hook:malformed-authorisation"));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
     @ExceptionHandler(InvalidIdFormatException.class)
     ResponseEntity<ProblemDetail> badId(InvalidIdFormatException badFormat) {
         ProblemDetail problem =
                 ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, badFormat.getMessage());
         problem.setType(URI.create("urn:agentic-wallet:hook:invalid-id-format"));
         return ResponseEntity.badRequest().body(problem);
-    }
-
-    /** The processor's id has the fixed id format too; it is logged, so it is checked (B4). */
-    private static String requireIdFormat(String processorAuthorisationId) {
-        return MerchantReference.parse(processorAuthorisationId).value();
     }
 }

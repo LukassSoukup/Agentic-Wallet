@@ -130,6 +130,16 @@ class AgentProposalController {
         return problem(HttpStatus.BAD_REQUEST, "invalid-id-format", badFormat.getMessage());
     }
 
+    /**
+     * The kernel's factories refuse an invalid value (parse, don't validate); at this edge that is
+     * a 400.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ProblemDetail> invalidProposal(IllegalArgumentException invalid) {
+        return problem(
+                HttpStatus.BAD_REQUEST, "invalid-proposal", "The proposal is not well formed.");
+    }
+
     private Optional<CallerIdentity> callerOf(String authorization) {
         if (authorization == null || !authorization.startsWith(BEARER)) {
             return Optional.empty();
@@ -138,6 +148,9 @@ class AgentProposalController {
     }
 
     private static Proposal parse(CallerIdentity caller, ProposalRequest request) {
+        if (request.lines() == null) {
+            throw new IllegalArgumentException("a proposal has at least one line");
+        }
         return new Proposal(
                 caller.agentInstance(),
                 PurchaseKey.parse(request.purchaseKey()),

@@ -95,22 +95,26 @@ public class Ledger {
         move(decision, "RELEASED", "reserved = reserved - r.amount");
     }
 
+    /**
+     * The reservation row is the compare-and-set: only the caller that moves it out of RESERVED
+     * (one row updated) touches the period totals, so two concurrent calls cannot both add.
+     */
     private void move(DecisionId decision, String toState, String periodUpdate) {
         int moved =
                 jdbc.sql(
-                                "update ledger.budget_period p set "
-                                        + periodUpdate
-                                        + " from ledger.reservation r where r.decision_id ="
-                                        + " :decision and r.state = 'RESERVED' and p.mandate_id ="
-                                        + " r.mandate_id and p.period_start = r.period_start")
+                                "update ledger.reservation set state = :state, changed_at = :at"
+                                        + " where decision_id = :decision and state = 'RESERVED'")
+                        .param("state", toState)
+                        .param("at", Timestamp.from(clock.now()))
                         .param("decision", decision.value())
                         .update();
         if (moved == 1) {
             jdbc.sql(
-                            "update ledger.reservation set state = :state, changed_at = :at where"
-                                    + " decision_id = :decision")
-                    .param("state", toState)
-                    .param("at", Timestamp.from(clock.now()))
+                            "update ledger.budget_period p set "
+                                    + periodUpdate
+                                    + " from ledger.reservation r where r.decision_id = :decision"
+                                    + " and p.mandate_id = r.mandate_id and p.period_start ="
+                                    + " r.period_start")
                     .param("decision", decision.value())
                     .update();
         }

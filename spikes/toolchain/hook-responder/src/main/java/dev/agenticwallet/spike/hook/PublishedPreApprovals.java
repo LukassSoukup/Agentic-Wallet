@@ -31,7 +31,7 @@ class PublishedPreApprovals {
                                 + " hook.pre_approval_consumption c on c.pre_approval_id ="
                                 + " p.decision_id where c.pre_approval_id is null and"
                                 + " p.merchant_reference = :merchant and p.currency = :currency"
-                                + " order by p.valid_from")
+                                + " order by p.amount, p.valid_from")
                 .param("merchant", merchant.value())
                 .param("currency", currency.getCurrencyCode())
                 .query((row, n) ->

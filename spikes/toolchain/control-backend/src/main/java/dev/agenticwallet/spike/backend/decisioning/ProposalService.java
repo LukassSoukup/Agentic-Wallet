@@ -22,6 +22,7 @@ import dev.agenticwallet.spike.core.payments.Checkout;
 import dev.agenticwallet.spike.kernel.Clock;
 import dev.agenticwallet.spike.kernel.events.DecisionMade;
 import dev.agenticwallet.spike.kernel.ids.DecisionId;
+import dev.agenticwallet.spike.kernel.ids.MandateId;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -35,8 +36,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * The purchase flow of 04-purchase-flow steps 2 to 8 for the skeleton. The merchant call (opening
  * the session) happens before the transaction; then one transaction inserts the proposal under its
- * unique key, locks the budget period, decides, stores the decision, reserves and pre-approves on
- * APPROVE, writes the audit record with the complete input and the outbox row.
+ * unique key, locks the budget period, share-locks the mandate version, decides, stores the
+ * decision, reserves and pre-approves on APPROVE, writes the audit record with the complete input
+ * and the outbox row.
  */
 @Service
 public class ProposalService {
@@ -136,6 +138,11 @@ public class ProposalService {
         proposals.insert(proposal, decisionId, now);
         LocalDate period = periodOf(now);
         LedgerSnapshot snapshot = ledger.lockAndRead(mandate.id(), period, mandate.budget());
+        // the version the decision is made under is the one share-locked here, not the copy read
+        // before the merchant call: a revocation in between is seen, or waits for this commit
+        MandateTerms locked =
+                mandates.lockTermsOf(mandate.id())
+                        .orElseThrow(() -> new MandateVanishedException(mandate.id()));
         CartEvidence cart =
                 new CartEvidence(opened.sessionId(), opened.total(), opened.expiresAt());
         DecisionInput input =
@@ -143,7 +150,7 @@ public class ProposalService {
                         DecisionInput.SCHEMA_VERSION,
                         Decider.RULE_SET_VERSION,
                         proposal,
-                        mandate,
+                        locked,
                         cart,
                         snapshot,
                         now);
@@ -152,13 +159,13 @@ public class ProposalService {
                 new DecisionRecord(
                         decisionId,
                         now,
-                        mandate.id(),
+                        locked.id(),
                         proposal.merchant(),
                         cart.checkoutSessionId(),
                         cart.total(),
                         verdict));
         if (verdict.outcome() == Outcome.APPROVE) {
-            ledger.reserve(decisionId, mandate.id(), period, cart.total());
+            ledger.reserve(decisionId, locked.id(), period, cart.total());
             preApprovals.preApprove(
                     new PreApproval(
                             decisionId,
@@ -173,7 +180,7 @@ public class ProposalService {
         events.publishEvent(
                 new DecisionMade(
                         decisionId.value(),
-                        mandate.id().value(),
+                        locked.id().value(),
                         verdict.outcome().name(),
                         cart.total(),
                         proposal.merchant().value(),
@@ -191,6 +198,14 @@ public class ProposalService {
 
         TwinVanishedException(Throwable cause) {
             super("the proposal that won the unique key is not readable", cause);
+        }
+    }
+
+    static final class MandateVanishedException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+
+        MandateVanishedException(MandateId id) {
+            super("mandate " + id.value() + " disappeared between the read and the decision");
         }
     }
 

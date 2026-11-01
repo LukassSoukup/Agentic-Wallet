@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -27,9 +28,25 @@ public class Mandates {
     }
 
     public Optional<MandateTerms> termsOf(MandateId id) {
+        return read(id, "");
+    }
+
+    /**
+     * The terms as they are inside the caller's transaction, share-locked so that a concurrent
+     * {@link #revoke} (an UPDATE) waits for the decision to commit or the decision sees the
+     * revocation (06-consistency §1, T-037 finding). {@code MANDATORY}: only meaningful in a
+     * transaction.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<MandateTerms> lockTermsOf(MandateId id) {
+        return read(id, " for share");
+    }
+
+    private Optional<MandateTerms> read(MandateId id, String lockClause) {
         return jdbc.sql(
                         "select id, version, status, limit_per_purchase, budget, currency from"
-                                + " mandates.mandate where id = :id")
+                                + " mandates.mandate where id = :id"
+                                + lockClause)
                 .param("id", id.value())
                 .query((row, n) ->
                         new MandateTerms(

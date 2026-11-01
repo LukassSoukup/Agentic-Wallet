@@ -106,6 +106,17 @@ class SkeletonFixtures {
                 .single();
     }
 
+    /** How often the registry delivered one event type for a decision to its listener. */
+    int completionAttemptsOf(String eventSimpleName, DecisionId decision) {
+        return jdbc.sql(
+                        "select coalesce(max(completion_attempts), 0) from event_publication where"
+                                + " event_type like :type and serialized_event like :decision")
+                .param("type", "%" + eventSimpleName)
+                .param("decision", "%" + decision.value() + "%")
+                .query(Integer.class)
+                .single();
+    }
+
     int credentialRequestsFor(DecisionId decision) {
         Map<?, ?> count =
                 simulators

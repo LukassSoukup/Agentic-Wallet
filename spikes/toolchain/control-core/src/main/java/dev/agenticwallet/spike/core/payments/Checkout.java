@@ -39,6 +39,12 @@ public interface Checkout {
 
         record Refused(String reasonCode) implements CompletionResult {}
 
+        /**
+         * The merchant says the session was completed before this call: evidence of completion, not
+         * a refusal.
+         */
+        record AlreadyCompleted() implements CompletionResult {}
+
         record NoAnswer() implements CompletionResult {}
     }
 

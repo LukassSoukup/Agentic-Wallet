@@ -13,10 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 06-consistency §4 in one transaction: deduplicate on the processor's authorisation id, find the
- * first unconsumed pre-approval the shared rule matches, consume it under the unique key (an {@code
- * ON CONFLICT DO NOTHING} that returns no row means another authorisation got it first), write the
- * call log, answer. Shadow mode records exactly what enforcing mode would.
+ * 06-consistency §4 in one transaction. First the processor's authorisation id is claimed in the
+ * call log (PENDING): a twin delivery of the same id blocks on that key until this transaction ends
+ * and then reads the stored answer. Then the first unconsumed pre-approval the shared rule matches
+ * is consumed under the unique key ({@code ON CONFLICT DO NOTHING}: no row means another
+ * authorisation got it first), and the claimed row is completed with the answer. Shadow mode
+ * records exactly what enforcing mode would.
  */
 @Service
 class HookService {
@@ -33,27 +35,49 @@ class HookService {
 
     @Transactional
     HookAnswer answer(Authorisation authorisation, Instant receivedAt) {
-        Optional<HookAnswer> stored = storedAnswerFor(authorisation.processorAuthorisationId());
-        if (stored.isPresent()) {
-            return stored.get();
+        if (!claim(authorisation, receivedAt)) {
+            return storedAnswerFor(authorisation.processorAuthorisationId())
+                    .orElseThrow(() ->
+                            new ClaimedWithoutAnswerException(
+                                    authorisation.processorAuthorisationId()));
         }
-        HookAnswer answer =
-                preApprovals
-                        .unconsumedAt(authorisation.merchant(), authorisation.amount().currency())
-                        .stream()
-                        .filter(candidate -> PreApprovalMatchRule.matches(candidate, authorisation))
-                        .filter(candidate -> consume(candidate, authorisation, receivedAt))
-                        .findFirst()
-                        .map(consumed -> HookAnswer.match(consumed.decisionId(), properties.mode()))
-                        .orElseGet(() -> HookAnswer.noMatch(properties.mode()));
-        logCall(authorisation, answer, receivedAt);
+        HookAnswer answer = HookAnswer.noMatch(properties.mode());
+        for (PreApproval candidate :
+                preApprovals.unconsumedAt(
+                        authorisation.merchant(), authorisation.amount().currency())) {
+            if (PreApprovalMatchRule.matches(candidate, authorisation)
+                    && consume(candidate, authorisation, receivedAt)) {
+                answer = HookAnswer.match(candidate.decisionId(), properties.mode());
+                break;
+            }
+        }
+        complete(authorisation, answer);
         return answer;
+    }
+
+    /** True when this call owns the processor id; false when an earlier call (or a twin) does. */
+    private boolean claim(Authorisation authorisation, Instant receivedAt) {
+        int rows =
+                jdbc.sql(
+                                "insert into hook.call_log (processor_authorisation_id, answer,"
+                                    + " amount, currency, merchant_reference, mode, received_at)"
+                                    + " values (:id, 'PENDING', :amount, :currency, :merchant,"
+                                    + " :mode, :at) on conflict (processor_authorisation_id) do"
+                                    + " nothing")
+                        .param("id", authorisation.processorAuthorisationId())
+                        .param("amount", authorisation.amount().amount())
+                        .param("currency", authorisation.amount().currency().getCurrencyCode())
+                        .param("merchant", authorisation.merchant().value())
+                        .param("mode", properties.mode().name())
+                        .param("at", Timestamp.from(receivedAt))
+                        .update();
+        return rows == 1;
     }
 
     private Optional<HookAnswer> storedAnswerFor(String processorAuthorisationId) {
         return jdbc.sql(
                         "select answer, pre_approval_id from hook.call_log where"
-                                + " processor_authorisation_id = :id")
+                                + " processor_authorisation_id = :id and answer <> 'PENDING'")
                 .param("id", processorAuthorisationId)
                 .query((row, n) -> {
                     UUID preApproval = row.getObject("pre_approval_id", UUID.class);
@@ -82,20 +106,25 @@ class HookService {
         return rows == 1;
     }
 
-    private void logCall(Authorisation authorisation, HookAnswer answer, Instant receivedAt) {
+    private void complete(Authorisation authorisation, HookAnswer answer) {
         jdbc.sql(
-                        "insert into hook.call_log (processor_authorisation_id, answer,"
-                                + " pre_approval_id, amount, currency, merchant_reference, mode,"
-                                + " received_at) values (:id, :answer, :pa, :amount, :currency,"
-                                + " :merchant, :mode, :at)")
-                .param("id", authorisation.processorAuthorisationId())
+                        "update hook.call_log set answer = :answer, pre_approval_id = :pa where"
+                                + " processor_authorisation_id = :id")
                 .param("answer", answer.answer().name())
                 .param("pa", answer.preApproval().map(DecisionId::value).orElse(null))
-                .param("amount", authorisation.amount().amount())
-                .param("currency", authorisation.amount().currency().getCurrencyCode())
-                .param("merchant", authorisation.merchant().value())
-                .param("mode", answer.mode().name())
-                .param("at", Timestamp.from(receivedAt))
+                .param("id", authorisation.processorAuthorisationId())
                 .update();
+    }
+
+    /** A claimed row whose owner never completed it: a crash mid-call; the processor retries. */
+    static final class ClaimedWithoutAnswerException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
+
+        ClaimedWithoutAnswerException(String processorAuthorisationId) {
+            super(
+                    "authorisation "
+                            + processorAuthorisationId
+                            + " is claimed but has no answer yet");
+        }
     }
 }

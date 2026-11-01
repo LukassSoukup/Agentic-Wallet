@@ -68,6 +68,11 @@ class PurchaseTools {
         Map<String, Object> arguments = request.arguments();
         @SuppressWarnings("unchecked") // the tool schema declares lines as an array of objects
         List<Map<String, Object>> lines = (List<Map<String, Object>>) arguments.get("lines");
+        if (lines == null || lines.isEmpty()) {
+            return error(
+                    "urn:agentic-wallet:control-mcp:invalid-proposal",
+                    "A proposal needs at least one line.");
+        }
         BackendClient.ProposalBody body =
                 new BackendClient.ProposalBody(
                         string(arguments, "purchaseKey"),

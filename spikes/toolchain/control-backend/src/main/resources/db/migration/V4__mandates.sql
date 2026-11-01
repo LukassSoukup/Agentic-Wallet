@@ -21,6 +21,6 @@ CREATE TABLE mandates.completed_purchase
 );
 
 -- SYNTHETIC seed for the skeleton: a 100.00 EUR limit per purchase and a 150.00 EUR budget, so two
--- 80.00 proposals racing for the budget can both pass the limit while only one fits the budget.
+-- 89.00 proposals racing for the budget can both pass the limit while only one fits the budget.
 INSERT INTO mandates.mandate (id, version, status, limit_per_purchase, budget, currency)
 VALUES ('00000000-0000-0000-0000-00000000a001', 1, 'ACTIVE', 100.00, 150.00, 'EUR');

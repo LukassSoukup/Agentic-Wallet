@@ -2,6 +2,8 @@ package dev.agenticwallet.spike.backend.payments;
 
 import dev.agenticwallet.spike.backend.authorisation.PreApprovals;
 import dev.agenticwallet.spike.backend.ledger.Ledger;
+import dev.agenticwallet.spike.backend.mandates.Mandates;
+import dev.agenticwallet.spike.core.decisioning.MandateStatus;
 import dev.agenticwallet.spike.core.payments.AttemptState;
 import dev.agenticwallet.spike.core.payments.Checkout;
 import dev.agenticwallet.spike.core.payments.Credential;
@@ -38,6 +40,7 @@ class CheckoutAttemptService {
     private final Checkout checkout;
     private final Ledger ledger;
     private final PreApprovals preApprovals;
+    private final Mandates mandates;
     private final ApplicationEventPublisher events;
     private final TransactionTemplate transaction;
     private final Clock clock;
@@ -49,6 +52,7 @@ class CheckoutAttemptService {
             Checkout checkout,
             Ledger ledger,
             PreApprovals preApprovals,
+            Mandates mandates,
             ApplicationEventPublisher events,
             TransactionTemplate transaction,
             Clock clock,
@@ -58,6 +62,7 @@ class CheckoutAttemptService {
         this.checkout = checkout;
         this.ledger = ledger;
         this.preApprovals = preApprovals;
+        this.mandates = mandates;
         this.events = events;
         this.transaction = transaction;
         this.clock = clock;
@@ -77,11 +82,7 @@ class CheckoutAttemptService {
                         approved.amount()));
         Instant credentialDeadline =
                 clock.now().plus(properties.credentialTimeout()).plus(properties.commitBound());
-        if (!move(
-                decision,
-                AttemptState.CREATED,
-                AttemptState.CREDENTIAL_REQUESTED,
-                credentialDeadline)) {
+        if (!leaveCreated(decision, new MandateId(approved.mandateId()), credentialDeadline)) {
             log.info(
                     "attempt for decision {} is past CREATED; this delivery changes nothing",
                     decision.value());
@@ -95,6 +96,42 @@ class CheckoutAttemptService {
             case CredentialIssuer.CredentialResult.Issued issued ->
                     completeWith(decision, approved, issued.credential());
         }
+    }
+
+    /**
+     * CREATED → CREDENTIAL_REQUESTED, or CREATED → CANCELLED when the mandate was revoked between
+     * the decision and this step (revocation cancels what has not asked for a credential,
+     * ADR-0006). The mandate is share-locked in the same transaction, so a revocation either is
+     * seen here or waits for this commit and then finds the attempt past CREATED. Returns whether
+     * this caller moved the attempt to CREDENTIAL_REQUESTED.
+     */
+    private boolean leaveCreated(
+            DecisionId decision, MandateId mandate, Instant credentialDeadline) {
+        return Boolean.TRUE.equals(
+                transaction.execute(status -> {
+                    boolean revoked =
+                            mandates.lockTermsOf(mandate)
+                                    .map(terms -> terms.status() == MandateStatus.REVOKED)
+                                    .orElse(true);
+                    if (revoked) {
+                        if (attempts.move(
+                                decision,
+                                AttemptState.CREATED,
+                                AttemptState.CANCELLED,
+                                Optional.empty(),
+                                Optional.of("mandate-revoked"))) {
+                            ledger.release(decision);
+                            preApprovals.cancel(decision);
+                        }
+                        return false;
+                    }
+                    return attempts.move(
+                            decision,
+                            AttemptState.CREATED,
+                            AttemptState.CREDENTIAL_REQUESTED,
+                            Optional.of(credentialDeadline),
+                            Optional.empty());
+                }));
     }
 
     private void completeWith(DecisionId decision, DecisionMade approved, Credential credential) {
@@ -116,6 +153,10 @@ class CheckoutAttemptService {
                     complete(decision, AttemptState.COMPLETING);
             case Checkout.CompletionResult.Refused refused ->
                     fail(decision, AttemptState.COMPLETING, refused.reasonCode());
+            case Checkout.CompletionResult.AlreadyCompleted ignored ->
+                    // evidence that the merchant did complete, by someone's call: never FAILED;
+                    // the resolver confirms it through the session status
+                    unknown(decision, AttemptState.COMPLETING);
             case Checkout.CompletionResult.NoAnswer ignored ->
                     unknown(decision, AttemptState.COMPLETING);
         }
@@ -126,8 +167,13 @@ class CheckoutAttemptService {
         switch (checkout.status(attempt.checkoutSessionId())) {
             case Checkout.SessionStatus.Completed ignored ->
                     complete(attempt.decisionId(), attempt.state());
-            case Checkout.SessionStatus.NotFound ignored ->
-                    fail(attempt.decisionId(), attempt.state(), "session-not-found");
+            case Checkout.SessionStatus.NotFound ignored -> {
+                // the merchant does not know the session: no evidence either way (§3), so UNKNOWN
+                // until the pre-approval window closes; closing the window is T-003's job
+                if (attempt.state() != AttemptState.UNKNOWN) {
+                    unknown(attempt.decisionId(), attempt.state());
+                }
+            }
             case Checkout.SessionStatus.Open ignored -> {
                 if (clock.now().isAfter(attempt.sessionExpiresAt())) {
                     fail(attempt.decisionId(), attempt.state(), "session-expired-uncompleted");

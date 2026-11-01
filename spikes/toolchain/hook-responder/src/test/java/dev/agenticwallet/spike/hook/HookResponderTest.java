@@ -72,6 +72,44 @@ class HookResponderTest {
     }
 
     @Test
+    void theSameProcessorIdDeliveredTwiceAtOnceGetsOneAnswerAndOneCallLogRow() throws Exception {
+        UUID preApproval = publish("40.00", "twin-shop", "ACTIVE");
+        String processorId = "twin-" + UUID.randomUUID();
+        java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+        try (var pool = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var first =
+                    pool.submit(() -> {
+                        start.await();
+                        return ask(processorId, "40.00", "twin-shop");
+                    });
+            var second =
+                    pool.submit(() -> {
+                        start.await();
+                        return ask(processorId, "40.00", "twin-shop");
+                    });
+            start.countDown();
+            assertThat(first.get())
+                    .containsEntry("answer", "MATCH")
+                    .containsEntry("preApprovalId", preApproval.toString());
+            assertThat(second.get())
+                    .containsEntry("answer", "MATCH")
+                    .containsEntry("preApprovalId", preApproval.toString());
+        }
+        assertThat(callLogRows(processorId)).isEqualTo(1);
+    }
+
+    @Test
+    void consumesTheSmallestPreApprovalThatFits() {
+        UUID large = publish("89.00", "two-shop", "ACTIVE");
+        UUID small = publish("29.90", "two-shop", "ACTIVE");
+
+        assertThat(ask("auth-" + UUID.randomUUID(), "29.90", "two-shop"))
+                .containsEntry("preApprovalId", small.toString());
+        assertThat(ask("auth-" + UUID.randomUUID(), "89.00", "two-shop"))
+                .containsEntry("preApprovalId", large.toString());
+    }
+
+    @Test
     void refusesAProcessorIdOutsideTheFixedFormat() {
         ResponseEntity<Map<String, Object>> answer =
                 postRaw(

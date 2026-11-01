@@ -18,8 +18,8 @@ import org.springframework.web.client.RestClient;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
- * One backend context for every scenario test: PostgreSQL 18 in Testcontainers, the simulators
- * in-process, short timeouts so the scenarios run in seconds, and the offset clock. The staleness
+ * One backend context for every scenario test: PostgreSQL 18 in Testcontainers, the simulators as a
+ * process, short timeouts so the scenarios run in seconds, and the offset clock. The staleness
  * bound stays above the listener deadline the properties imply (3 × (0.5 s + 2 s) + 1 s + 1.5 s +
  * 0.5 s = 10.5 s), or the context would refuse to start.
  */

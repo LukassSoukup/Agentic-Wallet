@@ -56,6 +56,13 @@ class RedeliveryFenceTest extends SkeletonBackendTest {
                 .untilAsserted(() ->
                         assertThat(fixtures.attemptState(decided.decisionId()))
                                 .isEqualTo(AttemptState.COMPLETED));
+        // the redelivery did happen: the registry counts a second completion attempt
+        await().atMost(Duration.ofSeconds(10))
+                .untilAsserted(() ->
+                        assertThat(
+                                        fixtures.completionAttemptsOf(
+                                                "DecisionMade", decided.decisionId()))
+                                .isGreaterThanOrEqualTo(2));
         assertThat(fixtures.credentialRequestsFor(decided.decisionId())).isEqualTo(1);
         assertThat(fixtures.reservationState(decided.decisionId())).isEqualTo("COUNTED");
     }
