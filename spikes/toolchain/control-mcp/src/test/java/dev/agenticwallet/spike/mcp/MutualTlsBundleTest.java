@@ -159,9 +159,8 @@ class MutualTlsBundleTest {
                         .body(String.class);
 
         // Characterisation (T-008 finding): the client built before the swap still presents the old
-        // certificate; the JDK client may also reuse its pooled TLS connection, which this test
-        // does
-        // not separate. A client rebuilt from the bundle presents the new one.
+        // certificate (the JDK client may also reuse its pooled TLS connection, which this test
+        // does not separate); a client rebuilt from the bundle presents the new one.
         assertThat(after).isEqualTo(before);
         assertThat(rebuilt).isNotEqualTo(before);
     }

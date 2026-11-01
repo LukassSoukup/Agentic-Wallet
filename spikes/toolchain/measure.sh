@@ -48,7 +48,6 @@ docker compose up -d --wait postgres
 docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' | grep postgres | sed 's/^/postgres container: /' >> "$OUT" || true
 free -h >> "$OUT"; echo '```' >> "$OUT"
 
-
 {
   echo
   echo '| Deployable | -Xmx | Context start (s) | Process running at start (s) | RSS after '"$SETTLE"'s (MB) | Heap used (MB) | ECS JSON log |'
