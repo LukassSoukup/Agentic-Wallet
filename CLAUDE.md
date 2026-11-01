@@ -4,7 +4,7 @@ Payment wallet for AI shopping agents with a deterministic control & security la
 Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BRIEF.md). It replaced the strategist handoff on 2026-10-29. Architecture: [docs/architecture/](docs/architecture/README.md).
 
 ## Current phase
-**Planning.** Architecture style and module cut proposed in ADR-0006 and ADR-0007, to be confirmed by the walking skeleton (T-037). Stack decided and conventions proposed in ADR-0009. No production code until the plan is agreed: T-008 (toolchain), T-037 (skeleton), T-003 (domain model and contracts), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
+**Planning.** Architecture style and module cut proposed in ADR-0006 and ADR-0007, to be confirmed by the walking skeleton (T-037). Stack decided and conventions proposed in ADR-0009; the toolchain is verified and pinned on the Pi ([T-008 report](docs/research/toolchain-on-the-pi.md); the throwaway reactor in `spikes/toolchain/` is the reference T-009 rebuilds at the root). No production code until the plan is agreed: T-037 (skeleton), T-003 (domain model and contracts), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
 
 ## Domain invariants (never violate; the reviewer checks every one)
 1. No payment without a control-layer decision. Decisions are exactly `APPROVE | DECLINE | STEP_UP`, each with reasons.
@@ -21,7 +21,7 @@ Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BR
 Quality first, no rapid development.
 - No choice is justified by a deadline, a demo or speed. Trading quality for speed needs the user's explicit decision.
 - Done means tested: a test per rule with its edges (at the limit, one cent over, foreign currency, duplicate delivery, injected text, pending step-up); property tests for money and the decision combiner; a Testcontainers test per DB adapter; one shared contract suite per port with more than one adapter.
-- The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core` (set by the user, T-008).
+- The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core`, set by the user on 2026-11-01 (T-008): line 85 %, branch 90 %, line per class 80 %, mutation score 85 %. Code under `spikes/` is exempt from the floors; everything that reaches `src/` is not.
 - No `TODO`/`FIXME` without an issue; no unexplained suppressions; named errors, no swallowed exceptions.
 - Every public port in `core` has a contract comment: inputs, failure modes, idempotency.
 - Dependencies pinned and checked for known vulnerabilities. Simulated/synthetic data is always labelled. Generated code (e.g. Claude Design output) is a reference, rebuilt to this bar.
@@ -30,6 +30,8 @@ Quality first, no rapid development.
 - One task = one branch = one PR into `main`. `main` is protected: CI must be green, nothing is pushed to it directly. The user approves by merging the PR.
 - Any agent that writes, changes, refactors, reviews or deletes code (spikes and tests included) loads the [clean-code](.claude/skills/clean-code/SKILL.md) and [design-patterns](.claude/skills/design-patterns/SKILL.md) skills first, unasked. When you start a subagent for code work, tell it to load them.
 - Before opening a PR, run the `reviewer` agent on the branch and fix what it finds.
+- SonarQube (user, 2026-11-01): the SonarCloud check on every PR is the gate. Locally, use only the free parts of the SonarQube plugin and `sonar` CLI: before every commit, `sonar analyze secrets <changed files>`; after every push of a PR branch, and before the reviewer runs, read the PR's quality gate and open issues (`sonar qg status -p LukassSoukup_Agentic-Wallet --pull-request <n>` and `sonar list issues -p LukassSoukup_Agentic-Wallet --pull-request <n> --format table`, or the plugin's `sonar-quality-gate` and `sonar-list-issues` skills) and fix what they report. Vortex in-loop analysis and dependency-risk scanning need a paid plan and are not used; no per-edit hook (see the tooling rule below).
+- Library docs (user, 2026-11-01): the Context7 MCP server is connected for up-to-date documentation. Use it proactively, unasked, whenever a question touches a stack library's API, configuration or behaviour (Spring Boot, Spring AI, Spring Modulith, Testcontainers, ArchUnit, jetCheck, Error Prone, Vite and the rest of ADR-0009): resolve the library, query at the pinned version, cite the source file it returns. Its code examples are generated and can lag an API move (seen with Testcontainers 2.0's package rename), so verify them against the artifact or the compiler like any generated code.
 - Backlog: [docs/backlog.md](docs/backlog.md). Decisions: [docs/adr/](docs/adr/README.md). Language: [glossary](docs/domain/glossary.md).
 - Docs link with relative Markdown links (they work on GitHub, in the IDE and in Obsidian). No wikilinks.
 - **No workflow tooling** (scripts, hooks, gates) until a real defect has shown up twice.
@@ -41,7 +43,7 @@ Quality first, no rapid development.
 
 ## Commands
 - Data check: `python3 scripts/data_check.py`
-- Build and test: none yet (T-008 sets up the toolchain; add the commands here then).
+- Build and test (the reactor is in `spikes/toolchain/` until T-009 rebuilds it at the root; the JDK is on `PATH` only in a login shell, so pass `JAVA_HOME`): `cd spikes/toolchain && JAVA_HOME=$HOME/.local/opt/jdk-25 ./mvnw verify` runs formatting, Error Prone with warnings as errors, unit, property, architecture, Testcontainers and MCP tests, coverage and mutation on `control-core`, the web build, tests and `npm audit`, and the vulnerability check (`-Pno-vuln-check` skips the NVD download while iterating; the check needs `NVD_API_KEY` exported in the shell, e.g. `set -a; . ./.env; set +a`, since Maven does not read `.env`). Format: `./mvnw spotless:apply`. One module: `./mvnw -pl control-core -am verify -Pno-vuln-check`. Web only: `./mvnw -pl web verify`. Measure the JVMs: `./measure.sh`. CI runs the same `./mvnw verify` ([ci.yml](.github/workflows/ci.yml)).
 
 ## Environment
-Raspberry Pi 5 (aarch64, 16 GB), also the home server. Docker available; no JDK or Postgres on the host yet. Prefer containers for databases; check `free -h` before memory-heavy builds.
+Raspberry Pi 5 (aarch64, 16 GB), also the home server. Docker available; Temurin 25 and Node 26 live under `~/.local/opt` and are on `PATH` only in login shells; no Postgres on the host. Prefer containers for databases; check `free -h` before memory-heavy builds, and expect port 8080 to be taken.

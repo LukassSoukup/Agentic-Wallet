@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: control-backend
+  datasource:
+    url: ${CONTROL_DB_URL}
+    username: ${CONTROL_DB_USER}
+    password: ${CONTROL_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 5000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    clean-disabled: true
+    schemas: public
+  modulith:
+    republish-outstanding-events-on-restart: true
+    events:
+      completion-mode: update
+      staleness:
+        check-interval: PT1S
+        processing: PT3S
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:}

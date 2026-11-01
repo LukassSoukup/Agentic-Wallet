@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  T-008 toolchain spike. Throwaway: never merged into src/. It exists to verify the
+  ADR-0009 checklist on the Pi and to settle the quality tooling and its versions.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>dev.agenticwallet.spike</groupId>
+  <artifactId>toolchain-spike</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>toolchain-spike</name>
+
+  <modules>
+    <module>shared-kernel</module>
+    <module>control-core</module>
+    <module>control-api</module>
+    <module>control-backend</module>
+    <module>control-mcp</module>
+    <module>connector-gateway</module>
+    <module>hook-responder</module>
+    <module>agent-harness</module>
+    <module>simulators</module>
+    <module>web</module>
+  </modules>
+
+  <properties>
+    <java.version>25</java.version>
+    <maven.compiler.release>${java.version}</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- Release trains (all released 2026-10-22; Spring AI and Modulith compile against Boot 4.1.2). -->
+    <spring-boot.version>4.1.2</spring-boot.version>
+    <spring-ai.version>2.0.2</spring-ai.version>
+    <spring-modulith.version>2.1.2</spring-modulith.version>
+
+    <!-- Test libraries Boot's BOM does not manage. -->
+    <archunit.version>1.5.1</archunit.version>
+    <jetcheck.version>0.3.0</jetcheck.version>
+
+    <!-- Quality tooling. -->
+    <error-prone.version>2.51.0</error-prone.version>
+    <spotless.version>3.10.4</spotless.version>
+    <google-java-format.version>2.0.0</google-java-format.version>
+    <jacoco.version>0.8.16</jacoco.version>
+    <pitest.version>1.30.1</pitest.version>
+    <pitest-junit5.version>1.2.3</pitest-junit5.version>
+    <dependency-check.version>13.0.0</dependency-check.version>
+    <maven-enforcer.version>3.7.0</maven-enforcer.version>
+    <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
+    <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
+    <node.version>v26.13.0</node.version>
+
+    <!-- Not gating here: code under spikes/ is exempt from the coverage and mutation floors
+         (the user, 2026-11-01). The decided floors for control-core (line 85 %, branch 90 %,
+         line per class 80 %, mutation score 85 %) are in CLAUDE.md and ADR-0009 and apply from
+         T-009's reactor on. The check and PIT still run so the gate is exercised. -->
+    <control-core.coverage.line.floor>0.00</control-core.coverage.line.floor>
+    <control-core.coverage.branch.floor>0.00</control-core.coverage.branch.floor>
+    <control-core.coverage.class-line.floor>0.00</control-core.coverage.class-line.floor>
+    <control-core.mutation.floor>0</control-core.mutation.floor>
+
+    <!-- Memory caps for every JVM a build forks; the Pi is also the home server. -->
+    <surefire.argLine>-Xmx512m -XX:+UseSerialGC -XX:TieredStopAtLevel=1</surefire.argLine>
+    <mockito.agent/>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-bom</artifactId>
+        <version>${spring-ai.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.modulith</groupId>
+        <artifactId>spring-modulith-bom</artifactId>
+        <version>${spring-modulith.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- Spring AI 2.0.2 pulls 3.0.1 (client-chat) and 3.0.6 (MCP SDK); Enforcer's upper-bound rule caught it. -->
+        <groupId>com.networknt</groupId>
+        <artifactId>json-schema-validator</artifactId>
+        <version>3.0.6</version>
+      </dependency>
+      <dependency>
+        <groupId>com.tngtech.archunit</groupId>
+        <artifactId>archunit-junit5</artifactId>
+        <version>${archunit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>jetCheck</artifactId>
+        <version>${jetcheck.version}</version>
+        <exclusions>
+          <exclusion>
+            <!-- jetCheck declares JUnit 4; the spike runs on JUnit 6 and needs none of it. -->
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>dev.agenticwallet.spike</groupId>
+        <artifactId>shared-kernel</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.agenticwallet.spike</groupId>
+        <artifactId>control-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.15.0</version>
+          <configuration>
+            <release>${java.version}</release>
+            <showWarnings>true</showWarnings>
+            <failOnWarning>true</failOnWarning>
+            <compilerArgs>
+              <!-- -processing: javac reports "no processor claimed" whenever an annotation processor
+                   is on the path for another annotation; it is noise, not a defect. -->
+              <arg>-Xlint:all,-processing</arg>
+              <arg>-Werror</arg>
+              <arg>-XDcompilePolicy=simple</arg>
+              <arg>--should-stop=ifError=FLOW</arg>
+              <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -XepExcludedPaths:.*/target/generated-.*  -Xep:EmptyCatch:ERROR -Xep:CatchAndPrintStackTrace:ERROR -Xep:FutureReturnValueIgnored:ERROR -Xep:MissingOverride:ERROR -Xep:DefaultCharset:ERROR</arg>
+            </compilerArgs>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>${error-prone.version}</version>
+              </path>
+            </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.5.6</version>
+          <configuration>
+            <argLine>@{argLine} ${surefire.argLine} ${mockito.agent}</argLine>
+            <trimStackTrace>false</trimStackTrace>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.5.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>3.1.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.1.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.5.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.21.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>repackage</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.pitest</groupId>
+          <artifactId>pitest-maven</artifactId>
+          <version>${pitest.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.pitest</groupId>
+              <artifactId>pitest-junit5-plugin</artifactId>
+              <version>${pitest-junit5.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>com.github.eirslett</groupId>
+          <artifactId>frontend-maven-plugin</artifactId>
+          <version>${frontend-maven-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-build-environment</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.9.16,4)</version>
+                </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>[25,26)</version>
+                </requireJavaVersion>
+                <requirePluginVersions>
+                  <banLatest>true</banLatest>
+                  <banRelease>true</banRelease>
+                  <banSnapshots>true</banSnapshots>
+                </requirePluginVersions>
+                <banDuplicatePomDependencyVersions/>
+                <requireReleaseDeps>
+                  <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
+                  <excludes>
+                    <exclude>dev.agenticwallet.spike:*</exclude>
+                  </excludes>
+                </requireReleaseDeps>
+                <requireUpperBoundDeps/>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- Exposes ${groupId:artifactId:jar} properties; used to attach the Mockito agent where Mockito is a dependency. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>dependency-properties</id>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.version}</version>
+        <configuration>
+          <java>
+            <googleJavaFormat>
+              <version>${google-java-format.version}</version>
+              <style>AOSP</style>
+              <reflowLongStrings>true</reflowLongStrings>
+              <formatJavadoc>true</formatJavadoc>
+            </googleJavaFormat>
+            <removeUnusedImports/>
+            <formatAnnotations/>
+          </java>
+          <pom>
+            <sortPom>
+              <expandEmptyElements>false</expandEmptyElements>
+              <nrOfIndentSpace>2</nrOfIndentSpace>
+              <keepBlankLines>true</keepBlankLines>
+            </sortPom>
+          </pom>
+        </configuration>
+        <executions>
+          <execution>
+            <id>spotless-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>${dependency-check.version}</version>
+        <configuration>
+          <failBuildOnCVSS>7</failBuildOnCVSS>
+          <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+          <skipProvidedScope>false</skipProvidedScope>
+          <skipTestScope>false</skipTestScope>
+          <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+          <nodeAuditAnalyzerEnabled>false</nodeAuditAnalyzerEnabled>
+        </configuration>
+        <executions>
+          <execution>
+            <id>vulnerability-check</id>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+            <phase>verify</phase>
+            <inherited>false</inherited>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <!-- Skips the NVD download; used while iterating on the Pi, and by CI until the NVD_API_KEY secret exists. -->
+      <id>no-vuln-check</id>
+      <properties>
+        <dependency-check.skip>true</dependency-check.skip>
+      </properties>
+    </profile>
+  </profiles>
+</project>

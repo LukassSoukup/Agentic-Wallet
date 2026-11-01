@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: hook-responder
+  datasource:
+    url: ${CONTROL_DB_URL}
+    username: ${HOOK_DB_USER}
+    password: ${HOOK_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+      connection-timeout: 300
+server:
+  port: ${PORT:8082}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

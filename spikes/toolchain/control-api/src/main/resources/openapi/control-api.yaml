@@ -1,0 +1,21 @@
+openapi: 3.1.0
+info:
+  title: Agentic Wallet control API (T-008 spike placeholder)
+  version: 0.0.1
+  description: The real document is written in T-003. This file only proves the module packages.
+paths:
+  /api/v1/agent/decisions/{decisionId}:
+    get:
+      operationId: getDecision
+      parameters:
+        - name: decisionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The decision.
+        "404":
+          description: Unknown decision (RFC 9457 problem).

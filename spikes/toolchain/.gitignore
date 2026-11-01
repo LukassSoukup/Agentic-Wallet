@@ -1,0 +1,11 @@
+target/
+node/
+node_modules/
+web/dist/
+web/coverage/
+.env
+*.p12
+*.pem
+*.key
+measurements/*.log
+*.tsbuildinfo

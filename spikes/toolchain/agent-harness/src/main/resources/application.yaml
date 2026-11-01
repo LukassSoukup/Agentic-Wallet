@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: agent-harness
+  config:
+    # The gitignored .env (spike root or module dir) fills OPENROUTER_API_KEY; only the name is here.
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
+  ai:
+    openai:
+      # Spring AI 2.0 appends /chat/completions to this URL, so it ends in /v1 (OpenRouter: /api/v1).
+      base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
+      api-key: ${OPENROUTER_API_KEY:}
+      chat:
+        options:
+          model: ${OPENROUTER_MODEL:openai/gpt-4o-mini}
+          temperature: 0
+    mcp:
+      client:
+        name: agent-harness
+        root-change-notification: false
+        initialized: ${MCP_CLIENT_INITIALIZED:true}
+        request-timeout: PT20S
+        streamable-http:
+          connections:
+            control:
+              url: ${CONTROL_MCP_URL:http://localhost:8081}
+server:
+  port: ${PORT:8084}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

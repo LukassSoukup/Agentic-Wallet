@@ -2,3 +2,4 @@
 *.csv text eol=lf
 *.jar binary
 *.png binary
+spikes/toolchain/mvnw.cmd text eol=crlf

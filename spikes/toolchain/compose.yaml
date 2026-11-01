@@ -1,0 +1,32 @@
+# PostgreSQL 18 for the spike on the Pi, with the memory limits ADR-0009 asks for.
+# Secrets come from the gitignored .env (POSTGRES_PASSWORD); only the name lives here.
+name: t008-spike
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-control}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-control}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=50
+      - -c
+      - transaction_timeout=10s
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-15432}:5432"
+    shm_size: 128m
+    mem_limit: 512m
+    memswap_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-control} -d ${POSTGRES_DB:-control}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql
+volumes:
+  pgdata:

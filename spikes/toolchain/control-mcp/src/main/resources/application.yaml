@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: control-mcp
+  ai:
+    mcp:
+      server:
+        name: control-mcp
+        version: 0.0.1
+        protocol: streamable
+        type: sync
+        instructions: ""
+        capabilities:
+          prompt: false
+          resource: false
+          completion: false
+        streamable-http:
+          mcp-endpoint: /mcp
+          keep-alive-interval: PT30S
+server:
+  port: ${PORT:8081}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      produce: W3C
+      consume: []
+  otlp:
+    tracing:
+      export:
+        enabled: ${OTLP_TRACING_ENABLED:false}
