@@ -12,13 +12,44 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  MAVEN_OPTS: -Xmx1g
+
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: raw data unchanged
         run: python3 scripts/data_check.py
-      # T-008 adds the build and tests here (./gradlew check).
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+          cache-dependency-path: spikes/toolchain/**/pom.xml
+      - name: cache the vulnerability database
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: dependency-check-data-${{ github.run_id }}
+          restore-keys: dependency-check-data-
+      # T-008: the Maven reactor lives in the toolchain spike until T-009 moves it to the repository root.
+      # ./mvnw verify runs formatting, static analysis with warnings as errors, unit, property, architecture,
+      # Testcontainers and MCP tests, coverage and mutation on control-core, the web build and the vulnerability check.
+      - name: build and verify
+        working-directory: spikes/toolchain
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        # Without the NVD_API_KEY secret the vulnerability database download is throttled to the point of
+        # failing the job, so the check is skipped and said so; add the secret and it runs on every PR.
+        run: |
+          if [ -n "$NVD_API_KEY" ]; then
+            ./mvnw verify
+          else
+            echo "::warning::NVD_API_KEY secret is not set: the dependency vulnerability check was skipped"
+            ./mvnw verify -Pno-vuln-check
+          fi

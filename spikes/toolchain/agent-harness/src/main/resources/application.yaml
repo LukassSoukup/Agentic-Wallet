@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: agent-harness
+  config:
+    # The gitignored .env (spike root or module dir) fills OPENROUTER_API_KEY; only the name is here.
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
+  ai:
+    openai:
+      # Spring AI 2.0.2 keeps only scheme, host and port of this URL (T-008 finding); the path comes back
+      # through agentic.llm-gateway.path-prefix below until Spring AI keeps it itself.
+      base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
+      api-key: ${OPENROUTER_API_KEY:}
+      chat:
+        options:
+          model: ${OPENROUTER_MODEL:openai/gpt-4o-mini}
+          temperature: 0
+    mcp:
+      client:
+        name: agent-harness
+        root-change-notification: false
+        initialized: ${MCP_CLIENT_INITIALIZED:true}
+        request-timeout: PT20S
+        streamable-http:
+          connections:
+            control:
+              url: ${CONTROL_MCP_URL:http://localhost:8081}
+agentic:
+  llm-gateway:
+    path-prefix: ${OPENROUTER_PATH_PREFIX:/api/v1}
+server:
+  port: ${PORT:8084}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

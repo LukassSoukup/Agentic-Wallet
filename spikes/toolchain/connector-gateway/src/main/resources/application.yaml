@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: connector-gateway
+  ai:
+    mcp:
+      server:
+        name: connector-gateway
+        version: 0.0.1
+        protocol: streamable
+        type: sync
+        capabilities:
+          prompt: false
+          resource: false
+          completion: false
+      client:
+        name: connector-gateway
+        root-change-notification: false
+        toolcallback:
+          enabled: false
+server:
+  port: ${PORT:8083}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
