@@ -8,6 +8,8 @@ spring:
     hikari:
       maximum-pool-size: 5
       connection-timeout: 5000
+      # ADR-0009 B6: the application sets the database timeouts on every connection it opens.
+      connection-init-sql: "set transaction_timeout = '${skeleton.database.transaction-timeout}'"
   jpa:
     open-in-view: false
     hibernate:
@@ -20,8 +22,9 @@ spring:
     events:
       completion-mode: update
       staleness:
-        check-interval: PT1S
-        processing: PT3S
+        check-interval: PT5S
+        # must exceed the checkout listener's deadline; ListenerDeadlineCheck refuses to start otherwise
+        processing: PT60S
 server:
   port: ${PORT:8080}
   shutdown: graceful
@@ -38,3 +41,23 @@ logging:
   structured:
     format:
       console: ${LOG_FORMAT:}
+skeleton:
+  database:
+    transaction-timeout: 10s
+  identity:
+    sessions:
+      # SYNTHETIC agent session; the token value is configuration (B2), the ids are the skeleton's fixtures.
+      - token: ${SKELETON_AGENT_TOKEN}
+        cardholder-id: 00000000-0000-0000-0000-00000000c001
+        agent-instance-id: 00000000-0000-0000-0000-00000000b001
+  decisioning:
+    pre-approval-window: PT168H
+  payments:
+    demo-shop-url: ${DEMO_SHOP_URL}
+    network-url: ${NETWORK_URL}
+    connect-timeout: PT2S
+    credential-timeout: PT3S
+    completion-timeout: PT5S
+    commit-bound: PT2S
+    resolver-interval: PT2S
+    session-lifetime: PT15M

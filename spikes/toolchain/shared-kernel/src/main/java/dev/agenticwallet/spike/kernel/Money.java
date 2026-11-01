@@ -27,9 +27,19 @@ public record Money(BigDecimal amount, Currency currency) {
         return new Money(new BigDecimal(amount), Currency.getInstance(currencyCode));
     }
 
+    public static Money zero(Currency currency) {
+        return new Money(BigDecimal.ZERO, currency);
+    }
+
     public Money plus(Money other) {
         requireSameCurrency(other);
         return new Money(amount.add(other.amount), currency);
+    }
+
+    /** May go below zero: a remaining budget is allowed to say how far over it is. */
+    public Money minus(Money other) {
+        requireSameCurrency(other);
+        return new Money(amount.subtract(other.amount), currency);
     }
 
     /** Converts with an FX rate, rounding half-even to scale 2 exactly once. */

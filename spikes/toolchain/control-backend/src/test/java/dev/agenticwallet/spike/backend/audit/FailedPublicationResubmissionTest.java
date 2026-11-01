@@ -27,7 +27,24 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * monitor turns a listener lost mid-flight (here: one that hangs past the bound) into a failed
  * publication.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.NONE,
+        properties = {
+            "skeleton.payments.demo-shop-url=http://localhost:1",
+            "skeleton.payments.network-url=http://localhost:1",
+            // a short staleness bound for the hang below, above the listener deadline these
+            // timeouts imply
+            "spring.datasource.hikari.connection-timeout=500",
+            "skeleton.database.transaction-timeout=1s",
+            "skeleton.payments.credential-timeout=PT0.5S",
+            "skeleton.payments.completion-timeout=PT0.5S",
+            "skeleton.payments.commit-bound=PT0.2S",
+            "spring.modulith.events.staleness.processing=PT6S",
+            "spring.modulith.events.staleness.check-interval=PT1S",
+            "skeleton.identity.sessions[0].token=synthetic-test-token",
+            "skeleton.identity.sessions[0].cardholder-id=00000000-0000-0000-0000-00000000c001",
+            "skeleton.identity.sessions[0].agent-instance-id=00000000-0000-0000-0000-00000000b001"
+        })
 @Import(FailedPublicationResubmissionTest.SyntheticListeners.class)
 class FailedPublicationResubmissionTest {
 
@@ -111,21 +128,23 @@ class FailedPublicationResubmissionTest {
     @Test
     void stalenessMonitorMarksAHungListenerFailed() {
         UUID id = UUID.randomUUID();
-        tx.executeWithoutResult(status -> events.publishEvent(new HangEvent(id, 8_000)));
+        tx.executeWithoutResult(status -> events.publishEvent(new HangEvent(id, 12_000)));
 
         await().atMost(Duration.ofSeconds(3))
                 .untilAsserted(() -> assertThat(statusOf(id)).isEqualTo("PROCESSING"));
-        // staleness.processing is PT3S with a PT1S check interval (application.yaml)
-        await().atMost(Duration.ofSeconds(8))
+        // staleness.processing is PT6S with a PT1S check interval (the properties above)
+        await().atMost(Duration.ofSeconds(10))
                 .untilAsserted(() -> assertThat(statusOf(id)).isEqualTo("FAILED"));
         assertThat(listeners.hangDeliveries()).isEqualTo(1);
 
-        // What the registry records once the hung listener finally returns is part of the finding.
-        await().atMost(Duration.ofSeconds(12)).until(() -> listeners.hangReturns() == 1);
-        // Characterises Spring Modulith 2.1.2: the late return overwrites the monitor's FAILED with
-        // COMPLETED. The monitor bounds a hang; it does not fence it. B6's compare-and-set on the
-        // attempt is the fence. If an upgrade changes this, the finding in the report changes too.
-        assertThat(statusOf(id)).isEqualTo("COMPLETED");
+        // What the registry records once the hung listener finally returns is a characterisation,
+        // not a guarantee: T-008 (PT3S bound, 8 s hang) saw the late return overwrite FAILED with
+        // COMPLETED; T-037 (PT6S bound, 12 s hang) saw FAILED stay. The design relies on neither:
+        // B6's compare-and-set on the attempt is the fence, and the resubmission job must tolerate
+        // both. The assertion records that the outcome is one of the two and nothing else.
+        await().atMost(Duration.ofSeconds(16)).until(() -> listeners.hangReturns() == 1);
+        await().atMost(Duration.ofSeconds(3))
+                .untilAsserted(() -> assertThat(statusOf(id)).isIn("FAILED", "COMPLETED"));
     }
 
     private String statusOf(UUID id) {

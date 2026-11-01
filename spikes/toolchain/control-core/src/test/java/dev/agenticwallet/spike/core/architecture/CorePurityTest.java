@@ -11,11 +11,12 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 /**
- * Invariant 9 as ArchUnit rules (ADR-0009 §A, Java 25): no framework, and none of the JDK's side
- * doors to the host's clock, randomness, defaults, environment, file system or network.
+ * Invariant 9 as ArchUnit rules (ADR-0009 §A, Java 25) over the core and the kernel it depends on:
+ * no framework, and none of the JDK's side doors to the host's clock, randomness, defaults,
+ * environment, file system or network.
  */
 @AnalyzeClasses(
-        packages = "dev.agenticwallet.spike.core",
+        packages = {"dev.agenticwallet.spike.core", "dev.agenticwallet.spike.kernel"},
         importOptions = ImportOption.DoNotIncludeTests.class)
 class CorePurityTest {
 

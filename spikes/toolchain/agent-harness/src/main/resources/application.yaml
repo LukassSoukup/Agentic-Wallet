@@ -25,6 +25,15 @@ spring:
               url: ${CONTROL_MCP_URL:http://localhost:8081}
 server:
   port: ${PORT:8084}
+skeleton:
+  # the agent session token the harness presents to control-mcp (B2: configuration, never in the repository)
+  agent-session-token: ${SKELETON_AGENT_TOKEN}
+  purchase:
+    # SYNTHETIC: the seeded mandate and the demo shop's kettle
+    mandate-id: ${SKELETON_MANDATE_ID:00000000-0000-0000-0000-00000000a001}
+    merchant-reference: demo-shop
+    merchant-item-id: SYN-0001
+    quantity: 1
 management:
   endpoints:
     web:
