@@ -8,7 +8,7 @@ export JAVA_HOME="${JAVA_HOME:-$HOME/.local/opt/jdk-25}"
 JAVA="$JAVA_HOME/bin/java"
 OUT="measurements/$(date +%Y-%m-%d_%H%M).md"
 SETTLE="${SETTLE:-25}"
-set -a; [ -f .env ] && . ./.env; set +a
+set -a; [[ -f .env ]] && . ./.env; set +a
 export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-synthetic-spike-password}"
 export CONTROL_DB_URL="jdbc:postgresql://127.0.0.1:${POSTGRES_PORT:-15432}/${POSTGRES_DB:-control}"
 export CONTROL_DB_USER="${POSTGRES_USER:-control}" CONTROL_DB_PASSWORD="$POSTGRES_PASSWORD"
