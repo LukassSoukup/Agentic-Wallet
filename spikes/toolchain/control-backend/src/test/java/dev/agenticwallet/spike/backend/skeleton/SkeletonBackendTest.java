@@ -72,6 +72,11 @@ public abstract class SkeletonBackendTest {
         }
 
         @Bean
+        RecordedCheckoutEvents recordedCheckoutEvents() {
+            return new RecordedCheckoutEvents();
+        }
+
+        @Bean
         SkeletonFixtures fixtures(JdbcClient jdbc, OffsetClock clock, RestClient.Builder builder) {
             return new SkeletonFixtures(jdbc, clock, builder, TestSimulators.URL);
         }

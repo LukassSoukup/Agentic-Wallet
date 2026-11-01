@@ -15,13 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 06-consistency §3: the merchant completes but answers after our read timeout. The attempt goes to
- * UNKNOWN, never FAILED; the reservation and pre-approval stay; the resolver reads the session
- * status after the stored deadline and settles it as COMPLETED, counted once, one credential.
+ * UNKNOWN (announced by its own event), never FAILED; the reservation and pre-approval stay; the
+ * resolver reads the session status and settles it as COMPLETED, counted once, one credential.
  */
 class CheckoutTimeoutTest extends SkeletonBackendTest {
 
     @Autowired ProposalService proposals;
     @Autowired SkeletonFixtures fixtures;
+    @Autowired RecordedCheckoutEvents events;
 
     private final CallerIdentity caller = new CallerIdentity(Proposals.CARDHOLDER, Proposals.AGENT);
 
@@ -41,18 +42,25 @@ class CheckoutTimeoutTest extends SkeletonBackendTest {
                         proposals.propose(
                                 caller, Proposals.of(mandate, Proposals.KETTLE, 1, "slow kettle"));
 
-        await().atMost(Duration.ofSeconds(10))
-                .untilAsserted(() ->
-                        assertThat(fixtures.attemptState(decided.decisionId()))
-                                .isEqualTo(AttemptState.UNKNOWN));
-        assertThat(fixtures.reservationState(decided.decisionId())).isEqualTo("RESERVED");
-        assertThat(fixtures.preApprovalState(decided.decisionId())).isEqualTo("ACTIVE");
-
-        await().atMost(Duration.ofSeconds(15))
+        // UNKNOWN lasts only until the resolver's next tick (the merchant did complete), so the
+        // evidence is the CheckoutOutcomeUnknown event reaching a listener, not a glimpse of the
+        // state.
+        await().atMost(Duration.ofSeconds(20))
                 .untilAsserted(() ->
                         assertThat(fixtures.attemptState(decided.decisionId()))
                                 .isEqualTo(AttemptState.COMPLETED));
+        await().atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    assertThat(events.unknownDecisions())
+                            .containsOnlyOnce(decided.decisionId().value());
+                    assertThat(events.completedDecisions())
+                            .containsOnlyOnce(decided.decisionId().value());
+                });
+        assertThat(events.failedDecisions()).doesNotContain(decided.decisionId().value());
+        assertThat(fixtures.publicationsOf("CheckoutOutcomeUnknown", decided.decisionId()))
+                .isEqualTo(1);
         assertThat(fixtures.reservationState(decided.decisionId())).isEqualTo("COUNTED");
+        assertThat(fixtures.preApprovalState(decided.decisionId())).isEqualTo("ACTIVE");
         assertThat(fixtures.credentialRequestsFor(decided.decisionId())).isEqualTo(1);
     }
 }
