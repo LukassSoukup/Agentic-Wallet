@@ -16,12 +16,12 @@
     <module>shared-kernel</module>
     <module>control-core</module>
     <module>control-api</module>
+    <module>simulators</module>
     <module>control-backend</module>
     <module>control-mcp</module>
     <module>connector-gateway</module>
     <module>hook-responder</module>
     <module>agent-harness</module>
-    <module>simulators</module>
     <module>web</module>
   </modules>
 
@@ -135,6 +135,8 @@
           <version>3.15.0</version>
           <configuration>
             <release>${java.version}</release>
+            <!-- Spring 7 reads @PathVariable and @RequestParam names from the class file only; Boot's parent sets this, a parentless reactor must. -->
+            <parameters>true</parameters>
             <showWarnings>true</showWarnings>
             <failOnWarning>true</failOnWarning>
             <compilerArgs>

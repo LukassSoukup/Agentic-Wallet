@@ -18,6 +18,15 @@ class DecisionEntity {
     @Column(name = "decided_at", nullable = false)
     private Instant decidedAt;
 
+    @Column(name = "mandate_id", nullable = false)
+    private UUID mandateId;
+
+    @Column(name = "merchant_reference", nullable = false, length = 64)
+    private String merchantReference;
+
+    @Column(name = "checkout_session_id", nullable = false, length = 64)
+    private String checkoutSessionId;
+
     @Column(name = "amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
@@ -35,12 +44,18 @@ class DecisionEntity {
     DecisionEntity(
             UUID id,
             Instant decidedAt,
+            UUID mandateId,
+            String merchantReference,
+            String checkoutSessionId,
             BigDecimal amount,
             String currency,
             String outcome,
             String reasons) {
         this.id = id;
         this.decidedAt = decidedAt;
+        this.mandateId = mandateId;
+        this.merchantReference = merchantReference;
+        this.checkoutSessionId = checkoutSessionId;
         this.amount = amount;
         this.currency = currency;
         this.outcome = outcome;
@@ -53,6 +68,18 @@ class DecisionEntity {
 
     Instant decidedAt() {
         return decidedAt;
+    }
+
+    UUID mandateId() {
+        return mandateId;
+    }
+
+    String merchantReference() {
+        return merchantReference;
+    }
+
+    String checkoutSessionId() {
+        return checkoutSessionId;
     }
 
     BigDecimal amount() {
