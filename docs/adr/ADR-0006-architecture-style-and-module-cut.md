@@ -1,8 +1,8 @@
 ---
 id: ADR-0006
-status: proposed
+status: accepted
 date: 2026-10-29
-tasks: ["T-033"]
+tasks: ["T-033", "T-037"]
 ---
 # ADR-0006: Architecture style, deployables and module cut
 
@@ -43,7 +43,7 @@ We build the shopping agent as well as the control layer: an agent platform with
 - \+ The untrusted zone reaches the control layer through one stateless process with a fixed tool list; a prompt injection can at most propose a purchase.
 - \+ The hook responder's latency and availability are isolated from the harness, the LLM and the backend's load.
 - \+ A module can be extracted later without redesign; the outbox can feed a broker without changing producers.
-- − Four JVMs (five once the connector gateway leaves the `control-mcp` process, which T-037 measures), the simulators and PostgreSQL on the Pi; each needs an explicit memory cap (T-008 and T-037 measure).
+- − Four JVMs (five once the connector gateway leaves the `control-mcp` process), the simulators and PostgreSQL on the Pi; each needs an explicit memory cap. Measured by T-008 idle and by T-037 with the purchase flow running ([07-walking-skeleton](../architecture/07-walking-skeleton.md)): the four deployables plus the simulators take about 1.1 GB resident with the flow running (backend 292 MB at 384m, control-mcp with the hosted gateway 210 MB at 192m, hook responder 176 MB at 128m, harness 246 MB at 256m, simulators 172 MB at 128m), PostgreSQL 58 MB; hosting the connector gateway in `control-mcp` costs about 16 MB where a fifth JVM costs 182 MB, so it stays hosted until epic K needs it apart.
 - − The hook responder's dependency on the backend's database instance limits how a bank may split the deployment.
 - − The REST contract between `control-mcp` and the backend must be versioned and contract-tested.
 - − Opening a merchant checkout session before deciding is a side effect at the merchant (no payment; the session expires on its own). For airlines a session may hold a seat, so proposals per mandate are capped.
@@ -51,3 +51,4 @@ We build the shopping agent as well as the control layer: an agent platform with
 - − An item spec makes the backend search a merchant's offers at proposal time; the choice among them is a rule in the core, not a judgement.
 - − A long-lived agent-instance credential still lives in the untrusted harness; it can only claim due runs, and a stolen one shows up as a duplicate claim.
 - Supersedes the module layout of [ADR-0001](ADR-0001-tech-stack.md) (`core`/`app`/`web`); the rest of the stack revision stays with T-004.
+- **Confirmed by the walking skeleton T-037 on 2026-11-01** ([07-walking-skeleton](../architecture/07-walking-skeleton.md)): the one-transaction decision under budget-period row locks, idempotency on (agent instance, `purchaseKey`) under concurrent delivery, the checkout attempt with `UNKNOWN` on timeout and the compare-and-set fence under redelivery and after a killed process, one pre-approval per authorisation at the hook, kernel events keeping `payments` and `mandates` acyclic under Spring Modulith, the bearer header through `control-mcp`, and the connector gateway hosted in `control-mcp` on its own listener. Sharpened by it: listeners that make remote calls are plain transactional event listeners with one transaction per transition (Spring Modulith's `@ApplicationModuleListener` would wrap them in one); the proposal row is inserted before the budget lock is taken; `DecisionMade` carries the stored checkout session expiry. Status moved to accepted; the user accepts by merging the T-037 PR.
