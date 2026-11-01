@@ -134,8 +134,8 @@ class AgentProposalController {
      * The kernel's factories refuse an invalid value (parse, don't validate); at this edge that is
      * a 400.
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    ResponseEntity<ProblemDetail> invalidProposal(IllegalArgumentException invalid) {
+    @ExceptionHandler(InvalidProposalException.class)
+    ResponseEntity<ProblemDetail> invalidProposal(InvalidProposalException invalid) {
         return problem(
                 HttpStatus.BAD_REQUEST, "invalid-proposal", "The proposal is not well formed.");
     }
@@ -149,20 +149,40 @@ class AgentProposalController {
 
     private static Proposal parse(CallerIdentity caller, ProposalRequest request) {
         if (request.lines() == null) {
-            throw new IllegalArgumentException("a proposal has at least one line");
+            throw new InvalidProposalException();
         }
-        return new Proposal(
-                caller.agentInstance(),
-                PurchaseKey.parse(request.purchaseKey()),
-                MandateId.parse(request.mandateId()),
-                MerchantReference.parse(request.merchantReference()),
-                request.lines().stream()
-                        .map(line ->
-                                new OrderLine(
-                                        MerchantItemId.parse(line.merchantItemId()),
-                                        line.quantity()))
-                        .toList(),
-                UntrustedText.of(request.description() == null ? "" : request.description()));
+        try {
+            return new Proposal(
+                    caller.agentInstance(),
+                    PurchaseKey.parse(request.purchaseKey()),
+                    MandateId.parse(request.mandateId()),
+                    MerchantReference.parse(request.merchantReference()),
+                    request.lines().stream()
+                            .map(line ->
+                                    new OrderLine(
+                                            MerchantItemId.parse(line.merchantItemId()),
+                                            line.quantity()))
+                            .toList(),
+                    UntrustedText.of(request.description() == null ? "" : request.description()));
+        } catch (InvalidIdFormatException badId) {
+            throw badId; // its own handler, its own problem type
+        } catch (IllegalArgumentException refusedByTheKernel) {
+            // the kernel's factories refuse an invalid value (parse, don't validate)
+            throw new InvalidProposalException(refusedByTheKernel);
+        }
+    }
+
+    /** The request did not parse into a proposal; the value is never echoed (B4). */
+    static final class InvalidProposalException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        InvalidProposalException() {
+            super("the proposal is not well formed");
+        }
+
+        InvalidProposalException(Throwable cause) {
+            super("the proposal is not well formed", cause);
+        }
     }
 
     private DecisionView view(DecisionId id, Verdict verdict) {

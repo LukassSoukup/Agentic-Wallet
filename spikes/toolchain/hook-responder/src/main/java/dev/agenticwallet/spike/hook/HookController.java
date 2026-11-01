@@ -46,10 +46,15 @@ class HookController {
 
     @PostMapping
     HookAnswerView authorise(@RequestBody HookRequest request) {
+        if (request.amount() == null
+                || request.currency() == null
+                || request.occurredAt() == null) {
+            throw new MalformedAuthorisationException();
+        }
         Authorisation authorisation =
                 new Authorisation(
                         ProcessorAuthorisationId.parse(request.processorAuthorisationId()).value(),
-                        new Money(request.amount(), Currency.getInstance(request.currency())),
+                        new Money(request.amount(), currencyOf(request.currency())),
                         MerchantReference.parse(request.merchantReference()),
                         request.occurredAt());
         HookAnswer answer = service.answer(authorisation, Instant.now());
@@ -60,9 +65,12 @@ class HookController {
                 answer.mode().name());
     }
 
-    /** A missing amount, currency or time is refused at the edge as a problem, never a 500. */
-    @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
-    ResponseEntity<ProblemDetail> malformed(RuntimeException malformed) {
+    /**
+     * A missing amount, currency or time, or an unknown currency, is a problem at the edge, never a
+     * 500.
+     */
+    @ExceptionHandler(MalformedAuthorisationException.class)
+    ResponseEntity<ProblemDetail> malformed(MalformedAuthorisationException malformed) {
         ProblemDetail problem =
                 ProblemDetail.forStatusAndDetail(
                         HttpStatus.BAD_REQUEST, "The authorisation is not well formed.");
@@ -76,5 +84,22 @@ class HookController {
                 ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, badFormat.getMessage());
         problem.setType(URI.create("urn:agentic-wallet:hook:invalid-id-format"));
         return ResponseEntity.badRequest().body(problem);
+    }
+
+    private static Currency currencyOf(String code) {
+        try {
+            return Currency.getInstance(code);
+        } catch (IllegalArgumentException unknownCurrency) {
+            throw new MalformedAuthorisationException();
+        }
+    }
+
+    /** The processor's request lacks a field or names an unknown currency; nothing is echoed. */
+    static final class MalformedAuthorisationException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        MalformedAuthorisationException() {
+            super("the authorisation is not well formed");
+        }
     }
 }

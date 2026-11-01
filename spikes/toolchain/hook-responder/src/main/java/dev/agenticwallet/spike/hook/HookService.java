@@ -116,7 +116,10 @@ class HookService {
                 .update();
     }
 
-    /** A claimed row whose owner never completed it: a crash mid-call; the processor retries. */
+    /**
+     * A claimed row without an answer. The claim and the answer commit together, so this cannot
+     * happen unless that invariant is broken; it is a guard, not an expected path.
+     */
     static final class ClaimedWithoutAnswerException extends IllegalStateException {
         private static final long serialVersionUID = 1L;
 
