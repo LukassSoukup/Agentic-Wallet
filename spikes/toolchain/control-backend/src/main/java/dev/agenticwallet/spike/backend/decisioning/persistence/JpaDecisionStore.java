@@ -7,11 +7,13 @@ import dev.agenticwallet.spike.core.decisioning.Outcome;
 import dev.agenticwallet.spike.core.decisioning.ReasonCode;
 import dev.agenticwallet.spike.core.decisioning.Verdict;
 import dev.agenticwallet.spike.kernel.Money;
+import dev.agenticwallet.spike.kernel.ids.DecisionId;
+import dev.agenticwallet.spike.kernel.ids.MandateId;
+import dev.agenticwallet.spike.kernel.ids.MerchantReference;
 import jakarta.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.stereotype.Component;
@@ -36,7 +38,7 @@ class JpaDecisionStore implements DecisionStore {
     @Override
     @Transactional
     public void append(DecisionRecord record) {
-        if (repository.existsById(record.id())) {
+        if (repository.existsById(record.id().value())) {
             throw new DuplicateDecisionException(record.id());
         }
         try {
@@ -50,14 +52,17 @@ class JpaDecisionStore implements DecisionStore {
     }
 
     @Override
-    public Optional<DecisionRecord> find(UUID id) {
-        return repository.findById(id).map(JpaDecisionStore::toRecord);
+    public Optional<DecisionRecord> find(DecisionId id) {
+        return repository.findById(id.value()).map(JpaDecisionStore::toRecord);
     }
 
     private static DecisionEntity toEntity(DecisionRecord record) {
         return new DecisionEntity(
-                record.id(),
+                record.id().value(),
                 record.decidedAt(),
+                record.mandateId().value(),
+                record.merchant().value(),
+                record.checkoutSessionId(),
                 record.amount().amount(),
                 record.amount().currency().getCurrencyCode(),
                 record.verdict().outcome().name(),
@@ -68,8 +73,11 @@ class JpaDecisionStore implements DecisionStore {
 
     private static DecisionRecord toRecord(DecisionEntity entity) {
         return new DecisionRecord(
-                entity.id(),
+                new DecisionId(entity.id()),
                 entity.decidedAt(),
+                new MandateId(entity.mandateId()),
+                MerchantReference.parse(entity.merchantReference()),
+                entity.checkoutSessionId(),
                 new Money(entity.amount(), Currency.getInstance(entity.currency())),
                 new Verdict(
                         Outcome.valueOf(entity.outcome()),

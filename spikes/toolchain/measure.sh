@@ -22,7 +22,7 @@ DEPLOYABLES=(
   "hook-responder|hook-responder/target/hook-responder-0.0.1-SNAPSHOT.jar|128m|8082"
   "connector-gateway|connector-gateway/target/connector-gateway-0.0.1-SNAPSHOT.jar|192m|8083"
   "agent-harness|agent-harness/target/agent-harness-0.0.1-SNAPSHOT.jar|256m|8084"
-  "demo-shop|simulators/target/simulators-0.0.1-SNAPSHOT.jar|128m|8090"
+  "demo-shop|simulators/target/simulators-0.0.1-SNAPSHOT-exec.jar|128m|8090"
 )
 
 mkdir -p measurements

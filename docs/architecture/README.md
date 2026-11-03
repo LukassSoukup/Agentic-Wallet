@@ -10,6 +10,7 @@ The backend's architecture style, its deployables and its module cut, agreed wit
 | [04-purchase-flow.md](04-purchase-flow.md) | One purchase end to end: proposal, cart evidence, decision, step-up, checkout, hook, reconciliation; the same flow for a standing mandate without the user and for an order through a merchant connector |
 | [05-open-items.md](05-open-items.md) | What this design leaves open, and who or what closes it |
 | [06-consistency.md](06-consistency.md) | Budget locking, step-up re-check, checkout attempts, pre-approval consumption, idempotency, the replay unit, event delivery |
+| [07-walking-skeleton.md](07-walking-skeleton.md) | What the walking skeleton (T-037) confirmed on the Pi: the mechanics under race, duplicate, timeout, redelivery and a killed process; memory, start times and hook latency; the findings that sharpen the design |
 | [diagrams/](diagrams/) | The same architecture as DuctTape.io diagrams, for reference: a one-page overview, the control backend as components with their data in and out, the system with its trust zones (02), the backend modules and events (03), one purchase end to end (04), each as a DuctTape import file (`.json`, "Import from JSON") and a Mermaid export (`.mmd`, "From Mermaid"); the pages and ADRs win where they differ |
 
 ## In one paragraph

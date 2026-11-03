@@ -17,6 +17,7 @@ import org.springframework.test.context.DynamicPropertySource;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
+            "skeleton.agent-session-token=synthetic-agent-token-0001",
             "spring.ai.mcp.client.enabled=false",
             "spring.ai.openai.api-key=synthetic-key"
         })

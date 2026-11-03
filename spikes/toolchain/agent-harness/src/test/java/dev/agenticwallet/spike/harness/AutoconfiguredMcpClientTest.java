@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Import;
         properties = {
             "server.port=18765",
             "spring.ai.openai.api-key=synthetic-key",
+            "skeleton.agent-session-token=synthetic-agent-token-0001",
             "spring.ai.mcp.client.initialized=false",
             "spring.ai.mcp.client.streamable-http.connections.control.url=http://localhost:18765",
             "spring.ai.mcp.server.protocol=streamable",

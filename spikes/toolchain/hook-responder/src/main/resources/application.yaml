@@ -8,6 +8,12 @@ spring:
     hikari:
       maximum-pool-size: 3
       connection-timeout: 300
+  flyway:
+    clean-disabled: true
+    # the responder owns the hook schema only; it reads the backend's published view
+    locations: classpath:db/hook
+    schemas: hook
+    default-schema: hook
 server:
   port: ${PORT:8082}
 management:
@@ -15,3 +21,7 @@ management:
     web:
       exposure:
         include: health
+skeleton:
+  hook:
+    # ADR-0009 B5: the mode is configuration without a default; SHADOW records what it would answer.
+    mode: ${HOOK_MODE}

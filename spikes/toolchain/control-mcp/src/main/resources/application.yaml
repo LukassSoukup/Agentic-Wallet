@@ -19,6 +19,14 @@ spring:
 server:
   port: ${PORT:8081}
   shutdown: graceful
+skeleton:
+  mcp:
+    backend-url: ${CONTROL_BACKEND_URL}
+    connect-timeout: PT2S
+    read-timeout: PT10S
+  gateway:
+    # the connector gateway hosted in this process behind its own listener (T-037 measures it)
+    port: ${GATEWAY_PORT:8083}
 management:
   endpoints:
     web:

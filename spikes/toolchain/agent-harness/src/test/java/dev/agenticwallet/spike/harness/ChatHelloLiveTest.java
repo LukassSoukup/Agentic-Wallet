@@ -14,7 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
-        properties = "spring.ai.mcp.client.enabled=false")
+        properties = {
+            "spring.ai.mcp.client.enabled=false",
+            "skeleton.agent-session-token=synthetic-agent-token-0001"
+        })
 @EnabledIfEnvironmentVariable(named = "OPENROUTER_API_KEY", matches = ".+")
 class ChatHelloLiveTest {
 
