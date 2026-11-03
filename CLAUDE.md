@@ -24,6 +24,8 @@ Quality first, no rapid development.
 - The build fails on formatting, static analysis and compiler warnings. Coverage and mutation floors on `core`, set by the user on 2026-11-01 (T-008): line 85 %, branch 90 %, line per class 80 %, mutation score 85 %. Code under `spikes/` is exempt from the floors; everything that reaches `src/` is not.
 - No `TODO`/`FIXME` without an issue; no unexplained suppressions; named errors, no swallowed exceptions.
 - Every public port in `core` has a contract comment: inputs, failure modes, idempotency.
+- Keep the codebase united and simple (user, 2026-11-03): one way of doing each thing across modules, the plainest construct that meets the bar, no abstraction or pattern before the second real case. Avoid overcomplication.
+- Object mapping is never written by hand (user, 2026-11-03): entities, DTOs and request bodies map to domain records through MapStruct in explicit mapper classes, with `unmappedTargetPolicy = ERROR`, so a field a mapper forgets fails the build; shared converters for `Money`, ids and enums live beside them.
 - Dependencies pinned and checked for known vulnerabilities. Simulated/synthetic data is always labelled. Generated code (e.g. Claude Design output) is a reference, rebuilt to this bar.
 
 ## How we work
