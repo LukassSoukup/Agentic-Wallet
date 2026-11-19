@@ -1,5 +1,7 @@
 # VIC sandbox access
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 Part of [visa-intelligent-commerce](visa-intelligent-commerce.md). From the signup page, the Intelligent Commerce guide, the TMS guide and the SDK, 2026-10-23 and 2026-10-24.
 
 ## Which route

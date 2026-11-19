@@ -1,5 +1,7 @@
 # VIC open questions
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 Part of [visa-intelligent-commerce](visa-intelligent-commerce.md). Each item is closed by a live call (logged in [vic-sandbox-log](vic-sandbox-log.md)) or an answer from Cybersource/Visa, then moved to the page it belongs to. Updated 2026-10-24.
 
 ## Open

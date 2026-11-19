@@ -1,5 +1,7 @@
 # VIC sources
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 Part of [visa-intelligent-commerce](visa-intelligent-commerce.md). Checked 2026-10-23, extended 2026-10-24.
 
 | Source | Access | What it gives | Gaps |

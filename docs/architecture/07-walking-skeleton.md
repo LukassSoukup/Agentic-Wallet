@@ -1,5 +1,7 @@
 # 07 Walking skeleton: what T-037 confirmed on the Pi
 
+> **History:** the skeleton ran the bank-first design; [ADR-0010](../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md) superseded its hook and pre-approval parts on 2026-11-19.
+
 Report of the walking skeleton spike (T-037), built in [`spikes/toolchain/`](../../spikes/toolchain/) on top of the toolchain spike of T-008 and run on the Raspberry Pi 5 on 2026-11-01. The spike exists to confirm [ADR-0006](../adr/ADR-0006-architecture-style-and-module-cut.md) and the mechanics of [06-consistency](06-consistency.md) before production code starts. **Everything under `spikes/` is throwaway** (the user, 2026-11-01): T-009 builds the real reactor at the root as new structure, takes from the spike only what the design intends, piece by piece with its dependencies, and nothing by copy. This page says what was proved, what T-009 must rebuild, and what it may read as a reference.
 
 ## What runs

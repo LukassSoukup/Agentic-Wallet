@@ -29,7 +29,7 @@ Before you add an interface, abstract class, factory, wrapper, event, or a secon
 | You need to… | Consider | Instead of |
 |---|---|---|
 | Swap an algorithm or rule set behind one interface | **Strategy** | `if`/`switch` on a mode flag |
-| Change behaviour as a lifecycle moves (proposed → stepped-up → approved/declined → authorised → captured) | **State**, or a sealed type of states with transition methods | Status strings and scattered checks |
+| Change behaviour as a lifecycle moves (proposed → stepped-up → approved/declined → token issued → completed) | **State**, or a sealed type of states with transition methods | Status strings and scattered checks |
 | Run a sequence of independent checks, each able to stop or annotate | **Chain of Responsibility**; for decision rules, always run every rule and fold the verdicts so every reason is recorded | One long method |
 | Talk to an external system (DB, rail, FX feed, LLM) without the core knowing it | **Adapter** behind a port (hexagonal) | Framework or SDK types in the core |
 | Add auditing, idempotency, retries, metrics or caching around a port | **Decorator** | Editing every adapter |
@@ -37,7 +37,7 @@ Before you add an interface, abstract class, factory, wrapper, event, or a secon
 | Control access to or lazily create something expensive or remote | **Proxy** | Checks spread through callers |
 | Build a complex immutable value or test fixture | **Builder** | Telescoping constructors |
 | Create one of several types from input, with validation | **Factory Method** / static factory | `new` + `if` at every call site |
-| Create families of related objects (simulated vs live rail clients) | **Abstract Factory**, usually just DI wiring | Mixing families by accident |
+| Create families of related objects (simulated vs live payment provider clients) | **Abstract Factory**, usually just DI wiring | Mixing families by accident |
 | Represent an operation as data to queue, log, replay or undo | **Command** | Direct calls that leave no record |
 | Notify other parts after something happened | **Observer** / domain events | The producer calling every consumer |
 | Coordinate many objects without them knowing each other | **Mediator** | A web of references |
@@ -54,9 +54,9 @@ Illustrative, based on the draft model in [ADR-0002](../../../docs/adr/ADR-0002-
 - **Strategy for decision rules.** Each fixed rule is its own type behind one interface, returning a verdict with reasons. The combiner folds verdicts and can only raise caution (APPROVE < STEP_UP < DECLINE). A risk or model signal is just another input to that fold; no strategy can lower the outcome (invariant 2).
 - **Value objects** (DDD): `Money`, `IdempotencyKey`, `UntrustedText`, `Period`. Immutable `record`s, validated in the factory.
 - **Aggregates and repositories** (DDD): one aggregate per consistency boundary; repositories are ports, one per aggregate root.
-- **Decorator for cross-cutting adapter concerns:** metrics, retries, caching around a port. The idempotency lookup and the audit write are steps inside the decision flow (ADR-0002: idempotency lookup → … → audit record → only then an authorisation), not wrappers around it. Decorators must not swallow failures.
+- **Decorator for cross-cutting adapter concerns:** metrics, retries, caching around a port. The idempotency lookup and the audit write are steps inside the decision flow (ADR-0002 as amended by ADR-0010: idempotency lookup → … → audit record → only then a checkout attempt issues a token), not wrappers around it. Decorators must not swallow failures.
 - **Command + append-only log for replay** (invariant 8): the decision's inputs are stored as data so the decision can be recomputed.
-- **State (or a sealed state type) for lifecycles:** proposals, step-ups, authorisations, mismatch cases. Illegal transitions are unrepresentable or throw a named exception.
+- **State (or a sealed state type) for lifecycles:** proposals, step-ups, checkout attempts, payment tokens, mismatch cases. Illegal transitions are unrepresentable or throw a named exception.
 - **Factory methods at the trust boundary:** untrusted input becomes a validated value or is rejected (parse, don't validate).
 - **Builder / Object Mother for tests:** readable fixtures with labelled synthetic data.
 
