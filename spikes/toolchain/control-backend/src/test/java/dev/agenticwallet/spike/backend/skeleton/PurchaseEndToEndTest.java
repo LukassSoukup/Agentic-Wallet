@@ -12,6 +12,7 @@ import dev.agenticwallet.spike.core.decisioning.Decider;
 import dev.agenticwallet.spike.core.decisioning.Outcome;
 import dev.agenticwallet.spike.core.decisioning.ReasonCode;
 import dev.agenticwallet.spike.core.payments.AttemptState;
+import dev.agenticwallet.spike.kernel.ids.MandateId;
 import java.math.BigDecimal;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,8 @@ class PurchaseEndToEndTest extends SkeletonBackendTest {
     @Test
     void approvesPaysOnceAndReplays() {
         fixtures.ownBudgetPeriod(1);
-        var proposal =
-                Proposals.of(Proposals.SEEDED_MANDATE, Proposals.KETTLE, 1, "a synthetic kettle");
+        MandateId mandate = fixtures.newMandate("100.00", "150.00");
+        var proposal = Proposals.of(mandate, Proposals.KETTLE, 1, "a synthetic kettle");
 
         ProposalOutcome outcome = proposals.propose(caller, proposal);
 
@@ -54,16 +55,15 @@ class PurchaseEndToEndTest extends SkeletonBackendTest {
                         assertThat(fixtures.attemptState(decided.decisionId()))
                                 .isEqualTo(AttemptState.COMPLETED));
         assertThat(fixtures.reservationState(decided.decisionId())).isEqualTo("COUNTED");
-        assertThat(fixtures.budgetPeriod(Proposals.SEEDED_MANDATE))
+        assertThat(fixtures.budgetPeriod(mandate))
                 .satisfies(period -> {
                     assertThat((BigDecimal) period.get("reserved")).isEqualByComparingTo("0.00");
                     assertThat((BigDecimal) period.get("counted")).isEqualByComparingTo("29.90");
                 });
         assertThat(fixtures.credentialRequestsFor(decided.decisionId())).isEqualTo(1);
         await().atMost(Duration.ofSeconds(10))
-                .untilAsserted(() ->
-                        assertThat(mandates.completedPurchasesOf(Proposals.SEEDED_MANDATE))
-                                .isEqualTo(1));
+                .untilAsserted(
+                        () -> assertThat(mandates.completedPurchasesOf(mandate)).isEqualTo(1));
         await().atMost(Duration.ofSeconds(10))
                 .untilAsserted(() -> assertThat(fixtures.incompletePublications()).isZero());
 
@@ -78,15 +78,14 @@ class PurchaseEndToEndTest extends SkeletonBackendTest {
     @Test
     void declinesOverTheLimitWithoutReservingOrPaying() {
         fixtures.ownBudgetPeriod(2);
-        var proposal =
-                Proposals.of(
-                        Proposals.SEEDED_MANDATE, Proposals.FLIGHT, 2, "two synthetic flights");
+        MandateId mandate = fixtures.newMandate("100.00", "150.00");
+        var proposal = Proposals.of(mandate, Proposals.FLIGHT, 2, "two synthetic flights");
 
         var decided = (ProposalOutcome.Decided) proposals.propose(caller, proposal);
 
         assertThat(decided.verdict().outcome()).isEqualTo(Outcome.DECLINE);
         assertThat(decided.verdict().reasons()).contains(ReasonCode.OVER_LIMIT);
-        assertThat(fixtures.budgetPeriod(Proposals.SEEDED_MANDATE))
+        assertThat(fixtures.budgetPeriod(mandate))
                 .satisfies(period ->
                         assertThat((BigDecimal) period.get("reserved"))
                                 .isEqualByComparingTo("0.00"));
