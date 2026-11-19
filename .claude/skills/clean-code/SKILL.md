@@ -82,7 +82,7 @@ Keep refactoring and behaviour change apart: separate commits at least, a separa
 
 ### Money and the domain (the reviewer checks these)
 - `BigDecimal`/`Money` only, never `double`/`float`/JS `number` for amounts. Half-even to 2 dp, explicit `RoundingMode` at every scale change; compare with `compareTo`, not `equals`.
-- FX conversion to the base currency before every comparison, through the `FxRates` port.
+- FX conversion into the currency of the limit compared with (the mandate's confirmed currency; the base currency for the global budget) before every comparison, through the `FxRates` port.
 - Untrusted text stays wrapped in `UntrustedText`; it never reaches control flow, a rule or a mandate.
 - A risk or model signal only moves an outcome towards caution.
 - No `Instant.now()`, `UUID.randomUUID()`, `new Random()` or `System.getenv()` in `core`.

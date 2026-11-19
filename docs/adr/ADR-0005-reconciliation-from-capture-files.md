@@ -1,10 +1,12 @@
 ---
 id: ADR-0005
-status: proposed
+status: superseded by ADR-0010
 date: 2026-10-18
 tasks: []
 ---
 # ADR-0005: Reconciliation from issuer-style capture files
+
+> **Superseded by [ADR-0010](ADR-0010-standalone-app-and-provider-payment-tokens.md) (2026-11-19; ADR-0010 accepted on merge of the T-042 PR)** (reconciliation matches the decision, the provider's token events and the shop's order record; no capture or clearing files, no CZK base). Kept for history.
 
 > **Re-opened 2026-10-23:** scope cut to captures for the demo. To be amended in the reconcile epic: settlement and the three-way match (M9), recurring and refund detection (M10); the real file format stays an open question until an issuer or TSYS sample exists.
 

@@ -19,7 +19,7 @@ The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt the
 ### Abstract Factory
 - **Use when:** Whole families of related objects must be created consistently.
 - **Avoid when:** There is only one family; DI configuration already does it.
-- **Here:** Simulated vs live rail clients chosen by configuration; usually just Spring profiles wiring adapters.
+- **Here:** Simulated vs live payment provider clients chosen by configuration; usually just Spring profiles wiring adapters.
 
 ### Builder
 - **Use when:** An object has many optional parts or must be built in steps, then be immutable.
@@ -46,7 +46,7 @@ The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt the
 ### Bridge
 - **Use when:** Two dimensions vary independently (abstraction × implementation).
 - **Avoid when:** Only one dimension varies.
-- **Here:** Possibly payment method × rail; decide in T-003/T-005, not speculatively.
+- **Here:** Possibly saved payment method × provider; decide in T-003/T-005, not speculatively.
 
 ### Composite
 - **Use when:** Parts and wholes form a tree and clients should treat them alike.
@@ -108,7 +108,7 @@ The example repositories are CC BY-NC-ND 4.0: read them, never copy or adapt the
 ### State
 - **Use when:** Behaviour depends on a state that changes at runtime, with rules on transitions.
 - **Avoid when:** Two states and one check.
-- **Here:** Purchase, step-up, authorisation and mismatch-case lifecycles; a sealed interface of states works well in Java 25.
+- **Here:** Purchase, step-up, checkout attempt, payment token and mismatch-case lifecycles; a sealed interface of states works well in Java 25.
 
 ### Strategy
 - **Use when:** Interchangeable algorithms behind one interface, chosen at runtime or by configuration.

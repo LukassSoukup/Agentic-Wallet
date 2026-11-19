@@ -1,5 +1,7 @@
 # VIC sandbox log
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 Part of [visa-intelligent-commerce](visa-intelligent-commerce.md). One entry per real call or session against the sandbox, newest first. Record the endpoint, what we sent (shape only, no secrets, no card numbers), the status and the response shape, and which open question it closes ([vic-open-questions](vic-open-questions.md)). Recorded responses that become test fixtures are scrubbed first. Network-token test cards can be provisioned only once per account: record each one used (last 4 digits only).
 
 Template:

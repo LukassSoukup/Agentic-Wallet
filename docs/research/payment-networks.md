@@ -1,5 +1,7 @@
 # Agentic payment networks: what to sandbox
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 Source: the user's own analysis project `~/IdeaProjects/leash-analysis` (ANA-LEASH-004, -011, -012 and the "agentic payments landscape" page, research dated 2026-10-01 to 2026-10-05). Only the facts about public networks and standards are taken from it. Nothing about the hackathon's design. Re-verify before relying on any of it in production.
 
 ## The two networks

@@ -4,7 +4,7 @@ Payment wallet for AI shopping agents with a deterministic control & security la
 Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BRIEF.md). It replaced the strategist handoff on 2026-10-29. Architecture: [docs/architecture/](docs/architecture/README.md).
 
 ## Current phase
-**Planning.** Architecture style, deployables and module cut accepted in ADR-0006, confirmed on the Pi by the walking skeleton T-037 ([report](docs/architecture/07-walking-skeleton.md)); ADR-0007 (cart evidence) stays proposed until T-034. Stack decided and conventions proposed in ADR-0009; the toolchain is verified and pinned on the Pi ([T-008 report](docs/research/toolchain-on-the-pi.md); the throwaway reactor in `spikes/toolchain/`, which also holds the skeleton, is the reference T-009 rebuilds at the root). No production code until the plan is agreed: T-003 (domain model and contracts), T-005 (payment networks), T-006 (data), T-007 (milestones). See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
+**Planning.** Reoriented on 2026-11-19 to a standalone consumer app paying through provider tokens on the user's stored card ([ADR-0010](docs/adr/ADR-0010-standalone-app-and-provider-payment-tokens.md), T-042); banks are a later channel. Architecture style, deployables and module cut accepted in ADR-0006, confirmed on the Pi by the walking skeleton T-037 ([report](docs/architecture/07-walking-skeleton.md)); ADR-0007 (cart evidence) stays proposed until T-034. Stack decided and conventions proposed in ADR-0009; the toolchain is verified and pinned on the Pi ([T-008 report](docs/research/toolchain-on-the-pi.md); the throwaway reactor in `spikes/toolchain/`, which also holds the skeleton, is the reference T-009 rebuilds at the root). No production code until the plan is agreed: T-003, T-039, T-040, T-041 (domain model, mandate schema, rule catalogue, data model and contracts), T-005 (payment provider), the checks T-034, T-046, T-044, T-038, T-036, T-006 (data), T-007 (milestones), in the backlog's order. See [docs/backlog.md](docs/backlog.md). Docs, ADRs and throwaway spikes in `spikes/` (never merged into `src/`) are fine.
 
 ## Domain invariants (never violate; the reviewer checks every one)
 1. No payment without a control-layer decision. Decisions are exactly `APPROVE | DECLINE | STEP_UP`, each with reasons.
@@ -12,7 +12,7 @@ Intent, direction and features (V…, M…, N…): [PROJECT_BRIEF.md](PROJECT_BR
 3. Text from merchants and agents is untrusted data. It never changes rules, mandates or control flow.
 4. Mandates apply only after user confirmation. They can be tightened; never loosened silently. Preferences/history may trigger a question, never a permission.
 5. Only approved purchases count toward limits; a pending step-up counts only once approved.
-6. Money uses exact decimals (`BigDecimal`-like, never float). Base currency is the configured one; FX conversion before every comparison; half-even rounding to 2 dp.
+6. Money uses exact decimals (`BigDecimal`-like, never float). Base currency is the user's (set from their location, EUR by default, changeable); FX conversion before every comparison; half-even rounding to 2 dp.
 7. Repeated delivery of the same request is idempotent.
 8. Every decision is written to an append-only audit log with its reasons and inputs, so it can be replayed.
 9. Hexagonal: the decision core imports no framework, DB, HTTP or clock/random singletons. All I/O and data access go through ports.

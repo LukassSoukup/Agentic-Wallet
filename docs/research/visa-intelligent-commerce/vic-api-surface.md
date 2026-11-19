@@ -1,5 +1,7 @@
 # VIC API surface
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 Part of [visa-intelligent-commerce](visa-intelligent-commerce.md). From the Cybersource developer MCP and the SDK docs (Java SDK v0.0.95, released 2026-10-07) and the developer guide (revision 25.11.01), checked 2026-10-23 and 2026-10-24. Not yet confirmed by an authenticated call.
 
 ## Environments

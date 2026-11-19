@@ -1,10 +1,12 @@
 ---
 id: ADR-0004
-status: proposed
+status: superseded by ADR-0010
 date: 2026-10-18
 tasks: []
 ---
 # ADR-0004: Payment methods, single-use authorisation and rails
+
+> **Superseded by [ADR-0010](ADR-0010-standalone-app-and-provider-payment-tokens.md) (2026-11-19; ADR-0010 accepted on merge of the T-042 PR)** (payment through a provider token on the user's stored payment method behind a `PaymentProvider` port; no network rails, no single-use authorisation hand-off, no x402). Kept for history.
 
 > **Re-opened 2026-10-23:** the rails and the hand-off were shaped by the event. To be superseded by the ADR of T-005 (hand-off and validity from the public specs, simulators first, x402 deferred).
 

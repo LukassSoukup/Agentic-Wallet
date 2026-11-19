@@ -1,5 +1,7 @@
 # Visa Intelligent Commerce: knowledge base
 
+> **Direction changed on 2026-11-19 ([ADR-0010](../../adr/ADR-0010-standalone-app-and-provider-payment-tokens.md)):** the product now pays through provider tokens on the user's stored card; these notes now serve "banks later / network tokens later" and no longer drive v1.
+
 What we know about Visa Intelligent Commerce (VIC) as it is offered through Cybersource, its sandbox, and how this project uses it. Start here.
 
 Started 2026-10-23. The rail itself is T-028. The network comparison stays in [payment-networks](../payment-networks.md).
